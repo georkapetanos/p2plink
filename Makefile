@@ -1,18 +1,37 @@
-lrd: lrd.o libjson.a
-	gcc -Wall -g lrd.o libjson.a -L /usr/local/lib/ -lssl -lcrypto -o lrd
+CC = gcc
 
-lrd.o: lrd.c json.h
-	gcc -Wall -g -c -Wno-deprecated-declarations lrd.c
+CFLAGS = -Wall -g
 
-lrdtest: lrdtest.o libjson.a
-	gcc -Wall -g lrdtest.o libjson.a -o lrdtest
+LDFLAGS =  -lmosquitto
 
-lrdtest.o: lrdtest.c json.h
-	gcc -Wall -g -c lrdtest.c
+lrd: lrd.o lib_lrdshared.a test python_bind
+	$(CC) $(CFLAGS) lrd.o lib_lrdshared.a -o lrd -lmosquitto
 
-libjson.a: json.c json.h
-	gcc -Wall -g -c json.c
-	ar rcs libjson.a json.o
+lrd_shared.o: lrd_shared.c lrd_shared.h
+	$(CC) $(CFLAGS) -c lrd_shared.c -o lrd_shared.o
+
+json.o: json.c json.h
+	$(CC) $(CFLAGS) -c json.c -o json.o
 	
+mqtt.o: mqtt.c mqtt.h
+	$(CC) $(CFLAGS) -c mqtt.c -o mqtt.o -lmosquitto
+
+lrd.o: lrd.c
+	$(CC) $(CFLAGS) -c lrd.c -o lrd.o
+	
+lib_lrdshared.a: lrd_shared.o json.o mqtt.o
+	ar rcs lib_lrdshared.a lrd_shared.o json.o mqtt.o
+
+test: test.o lib_lrdshared.a
+	$(CC) $(CFLAGS) test.o lib_lrdshared.a -o test -lmosquitto
+	
+test.o: test.c
+	$(CC) $(CFLAGS) -c test.c -o test.o
+
+python_bind: setup.py python_bind.c lib_lrdshared.a
+	CC=gcc python3 setup.py build
+	cp ./build/lib.linux-x86_64-3.10/lrd.cpython-310-x86_64-linux-gnu.so ./
+
 clean:
-	rm lrdtest lrdtest.o libjson.a json.o lrd.o lrd
+	rm -r build
+	rm lrd test lrd.cpython-310-x86_64-linux-gnu.so test.o lrd_shared.o json.o mqtt.o lrd.o lib_lrdshared.a

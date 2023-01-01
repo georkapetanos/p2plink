@@ -1,2 +1,7 @@
 #LRD config file
 uuid: 55aa7fcc-3986-11ed-a261-0242ac120002
+mqtt_hostname: 192.168.2.101
+mqtt_port: 1883
+mqtt_keep_alive: 60
+mqtt_password: 1761856778
+mqtt_username: george

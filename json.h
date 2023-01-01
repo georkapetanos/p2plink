@@ -8,7 +8,7 @@ typedef struct object objectT;
 
 json_rootT *json_init();
 
-char *json_to_string(json_rootT *root, bool nl_formatted);
+void json_to_string(json_rootT *root, char *json_string, bool nl_formatted);
 
 void json_append_object(json_rootT *root, char *name, char *value);
 

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#define REALLOC_SIZE 4
 #define MAX_STRING_SIZE 8192
+#define REALLOC_SIZE 4
 
 typedef struct json_root {
 	objectT *objects;
@@ -26,10 +26,9 @@ json_rootT *json_init() {
 	return root;
 }
 
-char *json_to_string(json_rootT *root, bool nl_formatted) {
-	int i;
-	char *json_string = NULL, *recursed_string = NULL;
-	size_t string_size;
+char *json_to_string_recursed(json_rootT *root, bool nl_formatted) {
+	int i, string_size;
+	char *recursed_string = NULL, *json_string = NULL;
 	
 	json_string = (char *) malloc(MAX_STRING_SIZE * sizeof(char));
 	json_string[0] = '\0';
@@ -56,7 +55,7 @@ char *json_to_string(json_rootT *root, bool nl_formatted) {
 			strcat(json_string, "\"");
 			strcat(json_string, root->objects[i].name);
 			strcat(json_string, "\":\"");
-			recursed_string = json_to_string(root->objects[i].branch, nl_formatted);
+			recursed_string = json_to_string_recursed(root->objects[i].branch, nl_formatted);
 			strcat(json_string, recursed_string);
 			free(recursed_string);
 		}
@@ -69,6 +68,45 @@ char *json_to_string(json_rootT *root, bool nl_formatted) {
 	json_string = (char *) realloc(json_string, (string_size + 1) * sizeof(char));
 	
 	return json_string;
+}
+
+void json_to_string(json_rootT *root, char *json_string, bool nl_formatted) {
+	int i;
+	char *recursed_string = NULL;
+	
+	json_string[0] = '\0';
+	strcpy(json_string, "{");
+	if(nl_formatted) {
+		strcat(json_string, "\n");
+	}
+	
+	for(i = 0; i < root->nofobjects; i++) {
+		if(i) {
+			strcat(json_string, ",");
+			if(nl_formatted) {
+				strcat(json_string, "\n");
+			}
+		}
+		if(root->objects[i].branch == NULL) {
+			strcat(json_string, "\"");
+			strcat(json_string, root->objects[i].name);
+			strcat(json_string, "\":\"");
+			strcat(json_string, root->objects[i].value);
+			strcat(json_string, "\"");
+		}
+		else {
+			strcat(json_string, "\"");
+			strcat(json_string, root->objects[i].name);
+			strcat(json_string, "\":\"");
+			recursed_string = json_to_string_recursed(root->objects[i].branch, nl_formatted);
+			strcat(json_string, recursed_string);
+			free(recursed_string);
+		}
+	}
+	if(nl_formatted) {
+		strcat(json_string, "\n");
+	}
+	strcat(json_string, "}");
 }
 
 void json_append_object(json_rootT *root, char *name, char *value) {
