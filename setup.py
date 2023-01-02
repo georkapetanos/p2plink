@@ -2,7 +2,9 @@ from setuptools import setup, Extension
 
 my_module = Extension("lrd", 
 		sources = ['python_bind.c'],
-		extra_objects = ["./lib_lrdshared.a"]
+		extra_objects = ["./lib_lrdshared.a"],
+		libraries=['uuid'],
+		extra_link_args = ["-L/usr/lib/x86_64-linux-gnu -luuid"]
 		)
 
 def main():

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#define MAX_STRING_SIZE 8192
 #define REALLOC_SIZE 4
 
 typedef struct json_root {

@@ -9,7 +9,6 @@
 #include "mqtt.h"
 #define MAX_MSG_BUFFER 4096
 #define USAGE_MSG "Usage: lrd [<arguments>]\n\n-h\t\tUsage message\n-c\t\tTransmit command\n-d <data>\tTransmit JSON data\n-r\t\tReceive JSON data\n-s </dev/ttyX>\tSet Serial device\n"
-#define MAX_STRING_SIZE 8192
 
 /* Transmit procedure
 * Parse input from user,

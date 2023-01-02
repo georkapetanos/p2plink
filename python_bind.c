@@ -2,7 +2,7 @@
 #include <string.h>
 #include <Python.h>
 #include "lrd_shared.h"
-#define MAX_STRING_SIZE 8192
+#include "json.h"
 
 static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	char *str, *json_string = NULL, *serial_port;

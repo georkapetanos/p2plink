@@ -3,6 +3,8 @@
 #ifndef _JSON_H
 #define _JSON_H
 
+#define MAX_STRING_SIZE 8192
+
 typedef struct json_root json_rootT;
 typedef struct object objectT;
 
