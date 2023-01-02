@@ -2,10 +2,10 @@ CC = gcc
 
 CFLAGS = -Wall -g
 
-LDFLAGS =  -lmosquitto
+LDFLAGS =  -lmosquitto -luuid
 
 lrd: lrd.o lib_lrdshared.a test python_bind
-	$(CC) $(CFLAGS) lrd.o lib_lrdshared.a -o lrd -lmosquitto
+	$(CC) $(CFLAGS) lrd.o lib_lrdshared.a -o lrd $(LDFLAGS)
 
 lrd_shared.o: lrd_shared.c lrd_shared.h
 	$(CC) $(CFLAGS) -c lrd_shared.c -o lrd_shared.o
@@ -23,7 +23,7 @@ lib_lrdshared.a: lrd_shared.o json.o mqtt.o
 	ar rcs lib_lrdshared.a lrd_shared.o json.o mqtt.o
 
 test: test.o lib_lrdshared.a
-	$(CC) $(CFLAGS) test.o lib_lrdshared.a -o test -lmosquitto
+	$(CC) $(CFLAGS) test.o lib_lrdshared.a -o test $(LDFLAGS)
 	
 test.o: test.c
 	$(CC) $(CFLAGS) -c test.c -o test.o

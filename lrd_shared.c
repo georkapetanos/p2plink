@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
+#include <uuid/uuid.h>
 #include "lrd_shared.h"
 #include "json.h"
 #define CONFIGURATION_FILENAME "./config.yaml"
@@ -25,19 +26,31 @@ char *current_timestamp() {
 	return(timestamp);
 }
 
+void uuid_generate_string(char *uuid) {
+	uuid_t binuuid;
+	
+	uuid_generate_random(binuuid);
+	uuid_unparse_lower(binuuid, uuid);
+	printf("generated uuid: %s\n", uuid); 
+}
+
 void read_configuration_file(config_dataT *config) {
 	FILE *filestream = NULL;
 	char line[256];
+	char *uuid;
 
 	filestream = fopen(CONFIGURATION_FILENAME, "r");
 
 	if (filestream == 0) {
 		printf("File %s doesn't exist.\n", CONFIGURATION_FILENAME);
+		uuid = (char *) malloc(37*sizeof(char));
+		uuid_generate_string(uuid);
 		filestream = fopen(CONFIGURATION_FILENAME, "w+");
-		fwrite("#LRD configuration file\nuuid: ", 23, 1, filestream);
-		fwrite(SAMPLE_UUID, 36, 1, filestream);
+		fwrite("#LRD configuration file\nuuid: ", 30, 1, filestream);
+		fwrite(uuid, 36, 1, filestream);
 		fwrite("\n", 1, 1, filestream);
 		rewind(filestream);
+		free(uuid);
 	}
 	
 	while(1) {
