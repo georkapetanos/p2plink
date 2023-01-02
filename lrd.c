@@ -8,14 +8,13 @@
 #include "json.h"
 #include "mqtt.h"
 #define MAX_MSG_BUFFER 4096
-#define SERIAL "/dev/ttyUSB0"
 #define USAGE_MSG "Usage: lrd [<arguments>]\n\n-h\t\tUsage message\n-c\t\tTransmit command\n-d <data>\tTransmit JSON data\n-r\t\tReceive JSON data\n-s </dev/ttyX>\tSet Serial device\n"
 #define MAX_STRING_SIZE 8192
 
 /* Transmit procedure
-* Parse input from user, generate JSON array,
-* insert uuid in JSON, encrypt JSON array,
-* transmit to serial
+* Parse input from user,
+* insert uuid and timestamp in JSON,
+* transmit JSON to serial
 * TODO checksum
 *
 */
@@ -39,8 +38,7 @@ int main(int argc, char *argv[]) {
 	int rx_size;
 		
 	read_configuration_file(&config);
-	
-	strcpy(serial_port, SERIAL);
+	strcpy(serial_port, config.serial_device);
 	
 	json_string = (char *) malloc(MAX_STRING_SIZE * sizeof(char));
 	

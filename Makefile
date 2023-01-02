@@ -14,7 +14,7 @@ json.o: json.c json.h
 	$(CC) $(CFLAGS) -c json.c -o json.o
 	
 mqtt.o: mqtt.c mqtt.h
-	$(CC) $(CFLAGS) -c mqtt.c -o mqtt.o -lmosquitto
+	$(CC) $(CFLAGS) -c mqtt.c -o mqtt.o
 
 lrd.o: lrd.c
 	$(CC) $(CFLAGS) -c lrd.c -o lrd.o

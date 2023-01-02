@@ -8,7 +8,7 @@
 #include "lrd_shared.h"
 #include "json.h"
 #define CONFIGURATION_FILENAME "./config.yaml"
-#define SAMPLE_UUID "55aa7fcc-3986-11ed-a261-0242ac120002"
+#define DEFAULT_SERIAL "/dev/ttyUSB0"
 
 char *current_timestamp() {
 	time_t now;
@@ -48,6 +48,8 @@ void read_configuration_file(config_dataT *config) {
 		filestream = fopen(CONFIGURATION_FILENAME, "w+");
 		fwrite("#LRD configuration file\nuuid: ", 30, 1, filestream);
 		fwrite(uuid, 36, 1, filestream);
+		fwrite("\nserial: ", 9, 1, filestream);
+		fwrite(DEFAULT_SERIAL, 12, 1, filestream);
 		fwrite("\n", 1, 1, filestream);
 		rewind(filestream);
 		free(uuid);
@@ -61,6 +63,10 @@ void read_configuration_file(config_dataT *config) {
 		if(strncmp(line, "uuid:", 5) == 0) {
 			strncpy(config->uuid, &line[6], 36);
 			config->uuid[36] = '\0';
+		} else if(strncmp(line, "serial:", 7) == 0) {
+			strcpy(config->serial_device, &line[8]);
+			//write null termination at last position from string, so as to overwrite new line character copied from above.
+			config->serial_device[strlen(config->serial_device) - 1] = '\0';
 		}
 	}
 

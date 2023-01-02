@@ -1,6 +1,6 @@
 ##LoRa Peer to Peer link for message and command delivering
 
-### Requirements: libmosquitto-dev
+### Requirements: libmosquitto-dev, uuid-dev
 
 ### Examples:
 Send JSON message usding serial0 interface

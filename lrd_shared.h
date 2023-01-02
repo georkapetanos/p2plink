@@ -1,10 +1,6 @@
 #ifndef LRD_SHARED_H
 #define LRD_SHARED_H
 
-/*typedef struct configurationT {
-	char uuid[37];
-} configurationT;*/
-
 typedef struct config_data{
 	char hostname[256];
 	unsigned short port;
@@ -12,6 +8,7 @@ typedef struct config_data{
 	char username[64];
 	char password[64];
 	char uuid[37];
+	char serial_device[32];
 } config_dataT;
 
 void read_configuration_file(config_dataT *config);
