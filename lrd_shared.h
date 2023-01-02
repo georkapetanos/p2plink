@@ -11,6 +11,7 @@ typedef struct config_data{
 	char serial_device[32];
 } config_dataT;
 
+void construct_json_str(char *data, char *uuid, char **json_output);
 void read_configuration_file(config_dataT *config);
 void construct_json_data(char *data, char *uuid, char **json_output);
 void serial_transmit(unsigned char *data, int size, char *serial_port);

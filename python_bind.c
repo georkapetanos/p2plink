@@ -15,7 +15,7 @@ static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	printf("Argument passed is: %s\n", str);
 	read_configuration_file(&config);
 	json_string = (char *) malloc(MAX_STRING_SIZE * sizeof(char));
-	construct_json_data(str, config.uuid, &json_string);
+	construct_json_str(str, config.uuid, &json_string);
 	serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
 	
 	free(json_string);

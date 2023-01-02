@@ -125,6 +125,56 @@ void construct_json_data(char *data, char *uuid, char **json_output) {
 	json_free(root);
 }
 
+void construct_json_str(char *data, char *uuid, char **json_output) {
+	json_rootT *root, *objects;
+	
+	root = json_init();
+	objects = json_init();
+	json_append_object(root, "type", "3");
+	
+	//count json parameters
+	/*for(i = 0; i < strlen(data); i++) {
+		if(data[i] == ',') {
+			count++;
+		}
+	}
+	count = (count / 2) + 1;
+	sprintf(count_string, "%d", count);
+	json_append_object(root, "size", count_string);
+	
+	do {
+		cur = strchr(cur, ',');
+		//printf("%s, %ld\n", cur, cur-prev_cur);
+		if(cur == NULL) {
+			break;
+		}
+		strncpy(name, prev_cur, cur-prev_cur);
+		name[cur-prev_cur] = '\0';
+		prev_cur = cur + 1;
+		cur = strchr(cur + 1, ',');
+		if(cur == NULL) {
+			strcpy(value, prev_cur);
+			json_append_object(objects, name, value);
+			break;
+		}
+		else {
+			strncpy(value, prev_cur, cur-prev_cur);
+			value[cur-prev_cur] = '\0';
+			prev_cur = cur + 1;
+			cur = cur + 1;
+			json_append_object(objects, name, value);
+		}
+	} while(cur != NULL);*/
+	
+	json_append_object(objects, "objs", data);
+
+	json_append_branch(root, objects, "data");
+	json_append_object(root, "ts", current_timestamp());
+	json_append_object(root, "uuid", uuid);
+	json_to_string(root, *json_output, false);
+	json_free(root);
+}
+
 void serial_transmit(unsigned char *data, int size, char *serial_port) {
 	int flags, fd;
 	

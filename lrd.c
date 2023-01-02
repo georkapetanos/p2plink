@@ -14,8 +14,8 @@
 * Parse input from user,
 * insert uuid and timestamp in JSON,
 * transmit JSON to serial
-* TODO checksum
-*
+* TODO checksum: extra hex outsise JSON at the end of transmission, will be clipped by receive function
+* command relay receiver implementation
 */
 
 void construct_json_command(char *command, char *uuid, char **json_output) {
