@@ -7,7 +7,7 @@
 static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	char *str, *json_string = NULL, *serial_port;
 	int count;
-	configurationT config;
+	config_dataT config;
 
 	if(!PyArg_ParseTuple(args, "iss", &count, &str, &serial_port)) {
 		return NULL;

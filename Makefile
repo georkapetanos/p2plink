@@ -30,8 +30,8 @@ test.o: test.c
 
 python_bind: setup.py python_bind.c lib_lrdshared.a
 	CC=gcc python3 setup.py build
-	cp ./build/lib.linux-x86_64-3.10/lrd.cpython-310-x86_64-linux-gnu.so ./
+	cp build/lib.*/lrd*.so ./
 
 clean:
 	rm -r build
-	rm lrd test lrd.cpython-310-x86_64-linux-gnu.so test.o lrd_shared.o json.o mqtt.o lrd.o lib_lrdshared.a
+	rm lrd test lrd.*.so test.o lrd_shared.o json.o mqtt.o lrd.o lib_lrdshared.a

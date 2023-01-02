@@ -5,7 +5,7 @@
 #define MAX_STRING_SIZE 8192
 
 int main(int argc, char *argv[]) {
-	configurationT config;
+	config_dataT config;
 	char str[256] = "boat,2,cat,1";
 	char *json_string = NULL;
 

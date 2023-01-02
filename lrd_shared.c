@@ -6,7 +6,6 @@
 #include <time.h>
 #include "lrd_shared.h"
 #include "json.h"
-#define SERIAL "/dev/ttyUSB0"
 #define CONFIGURATION_FILENAME "./config.yaml"
 #define SAMPLE_UUID "55aa7fcc-3986-11ed-a261-0242ac120002"
 
@@ -26,7 +25,7 @@ char *current_timestamp() {
 	return(timestamp);
 }
 
-void read_configuration_file(configurationT *config) {
+void read_configuration_file(config_dataT *config) {
 	FILE *filestream = NULL;
 	char line[256];
 
@@ -121,5 +120,26 @@ void serial_transmit(unsigned char *data, int size, char *serial_port) {
   		printf("Error while sending data\n");
  		exit(1);
 	}
+	close(fd);
+}
+
+void serial_receive(unsigned char *data, int *size, char *serial_port) {
+	int flags, fd, i = 0;
+	
+	flags = O_RDWR | O_NOCTTY;
+	if ((fd = open(serial_port, flags)) == -1) {
+  		printf("Error opening %s\n", serial_port);
+  		exit(1);
+	}
+	while(1) {
+		read(fd, &data[i], 1);
+		if(data[i] == '\n') {
+			break;
+		}
+		i++;
+	}
+	
+	*size = i;
+	
 	close(fd);
 }

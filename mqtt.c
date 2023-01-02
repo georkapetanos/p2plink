@@ -1,20 +1,12 @@
-#include "mqtt.h"
 #include <mosquitto.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "mqtt.h"
+#include "lrd_shared.h"
 #define CONFIGURATION_FILE "config.yaml"
 #define MQTT_TOPIC "lrdlink"
 #define IMPORT_LINE_SIZE 256
-
-typedef struct config_data{
-	char hostname[256];
-	unsigned short port;
-	unsigned short keep_alive;
-	char username[64];
-	char password[64];
-	char uuid[16];
-} config_dataT;
 
 struct mosquitto *mosq;
 config_dataT parsed_data;
