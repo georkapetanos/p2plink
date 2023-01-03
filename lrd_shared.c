@@ -31,7 +31,47 @@ void uuid_generate_string(char *uuid) {
 	
 	uuid_generate_random(binuuid);
 	uuid_unparse_lower(binuuid, uuid);
-	printf("generated uuid: %s\n", uuid); 
+	printf("Generated uuid: %s\n", uuid); 
+}
+
+int checksum_integrity_check(unsigned char *data, int size) {
+	short reductor = 0;
+	int i;
+	char calculated_checksum[3], checksum[3];
+	
+	checksum[0] = data[size - 1];
+	checksum[1] = data[size];
+	checksum[2] = '\0';
+	
+	for(i = 0; i < size - 2; i++) {
+		reductor ^= data[i];
+	}
+	sprintf(calculated_checksum, "%x", reductor);
+	if(strcmp(calculated_checksum, checksum) == 0) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+void checksum_generate(unsigned char *data, int size, char *checksum) {
+	short reductor = 0;
+	int i;
+	
+	for(i = 0; i < size; i++) {
+		reductor ^= data[i];
+	}
+	sprintf(checksum, "%x", reductor);
+}
+
+void embed_checksum(unsigned char *data, int size, char *checksum) {
+	data[size] = checksum[0];
+	data[size + 1] = checksum[1];
+	data[size + 2] = '\0';
+}
+
+void remove_checksum(unsigned char *data, int size) {
+	data[size - 2] = '\0';
 }
 
 void read_configuration_file(config_dataT *config) {
@@ -131,40 +171,6 @@ void construct_json_str(char *data, char *uuid, char **json_output) {
 	root = json_init();
 	objects = json_init();
 	json_append_object(root, "type", "3");
-	
-	//count json parameters
-	/*for(i = 0; i < strlen(data); i++) {
-		if(data[i] == ',') {
-			count++;
-		}
-	}
-	count = (count / 2) + 1;
-	sprintf(count_string, "%d", count);
-	json_append_object(root, "size", count_string);
-	
-	do {
-		cur = strchr(cur, ',');
-		//printf("%s, %ld\n", cur, cur-prev_cur);
-		if(cur == NULL) {
-			break;
-		}
-		strncpy(name, prev_cur, cur-prev_cur);
-		name[cur-prev_cur] = '\0';
-		prev_cur = cur + 1;
-		cur = strchr(cur + 1, ',');
-		if(cur == NULL) {
-			strcpy(value, prev_cur);
-			json_append_object(objects, name, value);
-			break;
-		}
-		else {
-			strncpy(value, prev_cur, cur-prev_cur);
-			value[cur-prev_cur] = '\0';
-			prev_cur = cur + 1;
-			cur = cur + 1;
-			json_append_object(objects, name, value);
-		}
-	} while(cur != NULL);*/
 	
 	json_append_object(objects, "objs", data);
 
