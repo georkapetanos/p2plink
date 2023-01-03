@@ -38,15 +38,23 @@ int checksum_integrity_check(unsigned char *data, int size) {
 	short reductor = 0;
 	int i;
 	char calculated_checksum[3], checksum[3];
-	
-	checksum[0] = data[size - 1];
-	checksum[1] = data[size];
+	//there is no termination null character, last character is new line
+	checksum[0] = data[size - 2];
+	checksum[1] = data[size - 1];
 	checksum[2] = '\0';
+	
+	printf("rx_buf:\n");
+	for(i = 0; i < size; i++) {
+		printf("%c", data[i]);
+	}
+	printf("\n");
 	
 	for(i = 0; i < size - 2; i++) {
 		reductor ^= data[i];
+		//printf("%x -- %x -- %c\n", reductor, temp, data[i]);
 	}
 	sprintf(calculated_checksum, "%x", reductor);
+	printf("checksum %s, calculated_checksum %s\n", checksum, calculated_checksum);
 	if(strcmp(calculated_checksum, checksum) == 0) {
 		return 0;
 	} else {
@@ -71,7 +79,25 @@ void embed_checksum(unsigned char *data, int size, char *checksum) {
 }
 
 void remove_checksum(unsigned char *data, int size) {
-	data[size - 2] = '\0';
+	data[size - 2] = '\n';
+	//data[size - 1] = '\0';
+	//size -= 2;
+}
+
+//remove possible carriage return (D hex character) at the start of data stream
+//add other preprocess options here
+int preprocess_received_data(unsigned char *data, int size) {
+	int i;
+	
+	if(data[0] == 0xD) {
+		for(i = 1; i < size; i++) {
+			data[i - 1] = data[i];
+		}
+		//return new size
+		return (size - 1);
+	}
+
+	return size;
 }
 
 void read_configuration_file(config_dataT *config) {

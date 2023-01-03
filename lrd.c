@@ -63,6 +63,8 @@ int main(int argc, char *argv[]) {
 				strcat(command, " -echo inlcr");
 				system(command);
 				construct_json_data(argv[i+1], config.uuid, &json_string);
+				checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
+				embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
 				printf("json: %s\n", json_string);
 				serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
 				i++;
@@ -96,17 +98,14 @@ int main(int argc, char *argv[]) {
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
 			while(1) {
 				serial_receive(rx_buf, &rx_size, serial_port);
+				rx_size = preprocess_received_data(rx_buf, rx_size);
 				if(checksum_integrity_check(rx_buf, rx_size)) {
 					//checksum doesn't match, drop packet
 					printf("Dropping 1 packet, wrong checksum\n");
 				} else {
 					remove_checksum(rx_buf, rx_size);
+					rx_size = rx_size - 2;
 					publish_message((char *) rx_buf, rx_size);
-					printf("rx_buf: ");
-					for(j = 0; j < rx_size; j++) {
-						printf("%c", rx_buf[j]);
-					}
-					printf("\n");
 				}
 			}
 			free(rx_buf);

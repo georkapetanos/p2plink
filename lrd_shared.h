@@ -15,6 +15,7 @@ void checksum_generate(unsigned char *data, int size, char *checksum);
 int checksum_integrity_check(unsigned char *data, int size);
 void embed_checksum(unsigned char *data, int size, char *checksum);
 void remove_checksum(unsigned char *data, int size);
+int preprocess_received_data(unsigned char *data, int size);
 void construct_json_str(char *data, char *uuid, char **json_output);
 void read_configuration_file(config_dataT *config);
 void construct_json_data(char *data, char *uuid, char **json_output);

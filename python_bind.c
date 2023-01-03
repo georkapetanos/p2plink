@@ -8,6 +8,7 @@ static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	char *str, *json_string = NULL, *serial_port;
 	int count;
 	config_dataT config;
+	char *checksum = (char *) malloc(3 * sizeof(unsigned char));
 
 	if(!PyArg_ParseTuple(args, "iss", &count, &str, &serial_port)) {
 		return NULL;
@@ -16,6 +17,8 @@ static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	read_configuration_file(&config);
 	json_string = (char *) malloc(MAX_STRING_SIZE * sizeof(char));
 	construct_json_str(str, config.uuid, &json_string);
+	checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
+	embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
 	serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
 	
 	free(json_string);
