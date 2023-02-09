@@ -53,7 +53,7 @@ int checksum_integrity_check(unsigned char *data, int size) {
 		reductor ^= data[i];
 		//printf("%x -- %x -- %c\n", reductor, temp, data[i]);
 	}
-	sprintf(calculated_checksum, "%x", reductor);
+	sprintf(calculated_checksum, "%02x", reductor); // add 02 for constant checksum size
 	printf("checksum %s, calculated_checksum %s\n", checksum, calculated_checksum);
 	if(strcmp(calculated_checksum, checksum) == 0) {
 		return 0;
@@ -69,7 +69,8 @@ void checksum_generate(unsigned char *data, int size, char *checksum) {
 	for(i = 0; i < size; i++) {
 		reductor ^= data[i];
 	}
-	sprintf(checksum, "%x", reductor);
+	printf("checksum_generate at %d, %d\n", __LINE__, reductor);
+	sprintf(checksum, "%02x", reductor); // add 02 for constant checksum size
 }
 
 void embed_checksum(unsigned char *data, int size, char *checksum) {

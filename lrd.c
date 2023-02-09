@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 			if(argv[i + 1][0] != '-') {
 				strcpy(command, "stty -F ");
 				strcat(command, serial_port);
-				strcat(command, " -echo inlcr");
+				strcat(command, " -echo");
 				system(command);
 				construct_json_data(argv[i+1], config.uuid, &json_string);
 				checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
@@ -75,10 +75,11 @@ int main(int argc, char *argv[]) {
 			if(argv[i + 1][0] != '-') {
 				strcpy(command, "stty -F ");
 				strcat(command, serial_port);
-				strcat(command, " -echo inlcr");
+				strcat(command, " -echo");
 				system(command);
 				construct_json_str(argv[i+1], config.uuid, &json_string);
 				checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
+				printf("calculated checksum %s.\n", checksum);
 				embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
 				printf("json: %s\n", json_string);
 				//printf("checksum = %s\n", checksum);
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
 			
 			strcpy(command, "stty -F ");
 			strcat(command, serial_port);
-			strcat(command, " -echo inlcr");
+			strcat(command, " -echo");
 			system(command);
 		
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
