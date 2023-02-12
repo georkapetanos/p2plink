@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
 	int encrypted_text_len = 0, decrypted_text_len = 0;
 	unsigned char *rx_buf;
 	int rx_size;
+	bool use_encryption = false;
 		
 	read_configuration_file(&config);
 	strcpy(serial_port, config.serial_device);
@@ -86,12 +87,13 @@ int main(int argc, char *argv[]) {
 				embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
 				printf("json: %s\n", json_string);
 				//printf("checksum = %s\n", checksum);
-				
-				encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
-				hex_print(encrypted_text, encrypted_text_len);
-				
-				//serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
-				serial_transmit(encrypted_text, encrypted_text_len, serial_port);
+				if(use_encryption) {
+					encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
+					hex_print(encrypted_text, encrypted_text_len);
+					serial_transmit(encrypted_text, encrypted_text_len, serial_port);
+				} else {
+					serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
+				}
 				i++;
 			} else {
 				printf("Invalid Syntax\n");
@@ -107,8 +109,10 @@ int main(int argc, char *argv[]) {
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
 			while(1) {
 				serial_receive(rx_buf, &rx_size, serial_port);
-				decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
-				printf("decrypted data: %s\n", decrypted_text);
+				if(use_encryption) {
+					decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
+					printf("decrypted data: %s\n", decrypted_text);
+				}
 				rx_size = preprocess_received_data(rx_buf, rx_size);
 				if(checksum_integrity_check(rx_buf, rx_size)) {
 					//checksum doesn't match, drop packet
@@ -123,6 +127,9 @@ int main(int argc, char *argv[]) {
 			i++;
 		} else if((strncmp(argv[i], "-t", 2) == 0) && (argc - 1 > i)) {
 			strcpy(serial_port, argv[i+1]);
+			i++;
+		} else if((strncmp(argv[i], "-e", 2) == 0) && (argc - 1 > i)) {
+			use_encryption = true;
 			i++;
 		} else if((strncmp(argv[i], "-y", 2) == 0) && (argc - 1 > i)) {
 			printf("input: ");
