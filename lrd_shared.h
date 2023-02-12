@@ -9,6 +9,8 @@ typedef struct config_data{
 	char password[64];
 	char uuid[37];
 	char serial_device[32];
+	char encryption_key[64];
+	char encryption_iv[64];
 } config_dataT;
 
 void checksum_generate(unsigned char *data, int size, char *checksum);

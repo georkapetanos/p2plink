@@ -2,7 +2,7 @@ CC = gcc
 
 CFLAGS = -Wall -g
 
-LDFLAGS =  -lmosquitto -luuid
+LDFLAGS =  -lmosquitto -luuid -lcrypto
 
 lrd: lrd.o lib_lrdshared.a test python_bind
 	$(CC) $(CFLAGS) lrd.o lib_lrdshared.a -o lrd $(LDFLAGS)
@@ -15,12 +15,15 @@ json.o: json.c json.h
 	
 mqtt.o: mqtt.c mqtt.h
 	$(CC) $(CFLAGS) -c mqtt.c -o mqtt.o
+	
+crypto.o: crypto.c crypto.h
+	$(CC) $(CFLAGS) -c crypto.c -o crypto.o
 
 lrd.o: lrd.c
 	$(CC) $(CFLAGS) -c lrd.c -o lrd.o
 	
-lib_lrdshared.a: lrd_shared.o json.o mqtt.o
-	ar rcs lib_lrdshared.a lrd_shared.o json.o mqtt.o
+lib_lrdshared.a: lrd_shared.o json.o mqtt.o crypto.o
+	ar rcs lib_lrdshared.a lrd_shared.o json.o mqtt.o crypto.o
 
 test: test.o lib_lrdshared.a
 	$(CC) $(CFLAGS) test.o lib_lrdshared.a -o test $(LDFLAGS)
@@ -34,4 +37,4 @@ python_bind: setup.py python_bind.c lib_lrdshared.a
 
 clean:
 	rm -r build
-	rm lrd test lrd.*.so test.o lrd_shared.o json.o mqtt.o lrd.o lib_lrdshared.a
+	rm lrd test lrd.*.so test.o lrd_shared.o json.o mqtt.o lrd.o lib_lrdshared.a crypto.o

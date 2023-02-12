@@ -54,7 +54,7 @@ int checksum_integrity_check(unsigned char *data, int size) {
 		//printf("%x -- %x -- %c\n", reductor, temp, data[i]);
 	}
 	sprintf(calculated_checksum, "%02x", reductor); // add 02 for constant checksum size
-	printf("checksum %s, calculated_checksum %s\n", checksum, calculated_checksum);
+	//printf("checksum %s, calculated_checksum %s\n", checksum, calculated_checksum);
 	if(strcmp(calculated_checksum, checksum) == 0) {
 		return 0;
 	} else {
@@ -134,11 +134,18 @@ void read_configuration_file(config_dataT *config) {
 			strcpy(config->serial_device, &line[8]);
 			//write null termination at last position from string, so as to overwrite new line character copied from above.
 			config->serial_device[strlen(config->serial_device) - 1] = '\0';
+		} else if(strncmp(line, "encryption_key:", 15) == 0) {
+			strcpy(config->encryption_key, &line[16]);
+			//write null termination at last position from string, so as to overwrite new line character copied from above.
+			config->encryption_key[strlen(config->encryption_key) - 1] = '\0';
+		} else if(strncmp(line, "encryption_iv:", 14) == 0) {
+			strcpy(config->encryption_iv, &line[15]);
+			//write null termination at last position from string, so as to overwrite new line character copied from above.
+			config->encryption_iv[strlen(config->encryption_iv) - 1] = '\0';
 		}
 	}
 
 	fclose(filestream);
-
 }
 
 void construct_json_data(char *data, char *uuid, char **json_output) {

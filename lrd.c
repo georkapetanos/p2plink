@@ -7,6 +7,7 @@
 #include "lrd_shared.h"
 #include "json.h"
 #include "mqtt.h"
+#include "crypto.h"
 #define MAX_MSG_BUFFER 4096
 #define USAGE_MSG "Usage: lrd [<arguments>]\n\n-h\t\tUsage message\n-c\t\tTransmit command\n-d <data>\tTransmit JSON data\n-r\t\tReceive JSON data\n-t </dev/ttyX>\tSet Serial device\n"
 
@@ -33,6 +34,8 @@ int main(int argc, char *argv[]) {
 	config_dataT config;
 	int i, j;
 	char *json_string = NULL, command[256], serial_port[64], *checksum = NULL;
+	unsigned char encrypted_text[4096], decrypted_text[4096];
+	int encrypted_text_len = 0, decrypted_text_len = 0;
 	unsigned char *rx_buf;
 	int rx_size;
 		
@@ -79,11 +82,16 @@ int main(int argc, char *argv[]) {
 				system(command);
 				construct_json_str(argv[i+1], config.uuid, &json_string);
 				checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
-				printf("calculated checksum %s.\n", checksum);
+				//printf("calculated checksum %s.\n", checksum);
 				embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
 				printf("json: %s\n", json_string);
 				//printf("checksum = %s\n", checksum);
-				serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
+				
+				encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
+				hex_print(encrypted_text, encrypted_text_len);
+				
+				//serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
+				serial_transmit(encrypted_text, encrypted_text_len, serial_port);
 				i++;
 			} else {
 				printf("Invalid Syntax\n");
@@ -99,6 +107,8 @@ int main(int argc, char *argv[]) {
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
 			while(1) {
 				serial_receive(rx_buf, &rx_size, serial_port);
+				decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
+				printf("decrypted data: %s\n", decrypted_text);
 				rx_size = preprocess_received_data(rx_buf, rx_size);
 				if(checksum_integrity_check(rx_buf, rx_size)) {
 					//checksum doesn't match, drop packet
