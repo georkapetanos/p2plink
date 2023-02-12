@@ -9,7 +9,7 @@
 #include "mqtt.h"
 #include "crypto.h"
 #define MAX_MSG_BUFFER 4096
-#define USAGE_MSG "Usage: lrd [<arguments>]\n\n-h\t\tUsage message\n-c\t\tTransmit command\n-d <data>\tTransmit JSON data\n-r\t\tReceive JSON data\n-t </dev/ttyX>\tSet Serial device\n"
+#define USAGE_MSG "Usage: lrd [<arguments>]\n\n-h\t\tUsage message\n-c\t\tTransmit command\n-d <data>\tTransmit custom object array\n-s <string>\tTransmit plain string\n-r\t\tReceive JSON data\n-t </dev/ttyX>\tSet Serial device\n-e\t\tEnable encryption\n"
 
 /* Transmit procedure
 * Parse input from user,
@@ -128,9 +128,8 @@ int main(int argc, char *argv[]) {
 		} else if((strncmp(argv[i], "-t", 2) == 0) && (argc - 1 > i)) {
 			strcpy(serial_port, argv[i+1]);
 			i++;
-		} else if((strncmp(argv[i], "-e", 2) == 0) && (argc - 1 > i)) {
+		} else if(strncmp(argv[i], "-e", 2) == 0) {
 			use_encryption = true;
-			i++;
 		} else if((strncmp(argv[i], "-y", 2) == 0) && (argc - 1 > i)) {
 			printf("input: ");
 			for(j = i + 4; j < argc; j++) {
