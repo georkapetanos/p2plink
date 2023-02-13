@@ -47,7 +47,7 @@ int checksum_integrity_check(unsigned char *data, int size) {
 	
 	printf("rx_buf:\n");
 	for(i = 0; i < size; i++) {
-		printf("%c", data[i]);
+		printf("%x.", data[i]);
 	}
 	printf("\n");
 	
@@ -261,7 +261,17 @@ void serial_init(char *serial_port, int *serial) {
 }
 
 void serial_rx(int serial, unsigned char *data, int *size) {
-	*size = read(serial, data, 4096);
+	int rx_size = 0;	
+	
+	*size = 0;
+	while(1) {
+		rx_size = read(serial, &data[*size], 4096);
+		//printf("rx_size = %d\n", rx_size);
+		if((rx_size == 0) && (*size != 0)) {
+			break;
+		}
+		*size += rx_size;
+	}
 }
 
 void serial_tx(int serial, unsigned char *data, int size) {

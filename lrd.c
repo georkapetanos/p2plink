@@ -95,6 +95,7 @@ int main(int argc, char *argv[]) {
 					encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
 					hex_print(encrypted_text, encrypted_text_len);
 					//serial_transmit(encrypted_text, encrypted_text_len, serial_port);
+					printf("encrypted_text_len = %d\n", encrypted_text_len);
 					serial_tx(serial, encrypted_text, encrypted_text_len);
 				} else {
 					//serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
@@ -123,9 +124,12 @@ int main(int argc, char *argv[]) {
 				serial_rx(serial, rx_buf, &rx_size);
 				if(use_encryption) {
 					decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
+					printf("decrypted size = %d, rx_size = %d\n", decrypted_text_len, rx_size);
 					printf("decrypted data: %s\n", decrypted_text);
+					memcpy(rx_buf, decrypted_text, decrypted_text_len);
+					rx_size = decrypted_text_len;
 				}
-				rx_size = preprocess_received_data(rx_buf, rx_size);
+				//rx_size = preprocess_received_data(rx_buf, rx_size);
 				if(checksum_integrity_check(rx_buf, rx_size)) {
 					//checksum doesn't match, drop packet
 					printf("Dropping 1 packet, wrong checksum\n");
