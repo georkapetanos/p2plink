@@ -47,7 +47,7 @@ int checksum_integrity_check(unsigned char *data, int size) {
 	
 	printf("rx_buf:\n");
 	for(i = 0; i < size; i++) {
-		printf("%x.", data[i]);
+		printf("%c", data[i]);
 	}
 	printf("\n");
 	
@@ -71,7 +71,7 @@ void checksum_generate(unsigned char *data, int size, char *checksum) {
 	for(i = 0; i < size; i++) {
 		reductor ^= data[i];
 	}
-	printf("checksum_generate at %d, %d\n", __LINE__, reductor);
+	//printf("checksum_generate at %d, %d\n", __LINE__, reductor);
 	sprintf(checksum, "%02x", reductor); // add 02 for constant checksum size
 }
 
@@ -85,22 +85,6 @@ void remove_checksum(unsigned char *data, int size) {
 	data[size - 2] = '\n';
 	//data[size - 1] = '\0';
 	//size -= 2;
-}
-
-//remove possible carriage return (D hex character) at the start of data stream
-//add other preprocess options here
-int preprocess_received_data(unsigned char *data, int size) {
-	int i;
-	
-	if(data[0] == 0xD) {
-		for(i = 1; i < size; i++) {
-			data[i - 1] = data[i];
-		}
-		//return new size
-		return (size - 1);
-	}
-
-	return size;
 }
 
 void read_configuration_file(config_dataT *config) {
@@ -280,42 +264,4 @@ void serial_tx(int serial, unsigned char *data, int size) {
 
 void serial_close(int *serial) {
 	close(*serial);
-}
-
-void serial_transmit(unsigned char *data, int size, char *serial_port) {
-	int flags, fd;
-	
-	//add new line character so that tty will release buffer
-	data[size] = '\n';
-	flags = O_RDWR | O_NOCTTY;
-	if ((fd = open(serial_port, flags)) == -1) {
-  		printf("Error opening %s\n", serial_port);
-  		exit(1);
-	}
-	if (write(fd, data, size + 1) < 0 ) {
-  		printf("Error while sending data\n");
- 		exit(1);
-	}
-	close(fd);
-}
-
-void serial_receive(unsigned char *data, int *size, char *serial_port) {
-	int flags, fd, i = 0;
-	
-	flags = O_RDWR | O_NOCTTY;
-	if ((fd = open(serial_port, flags)) == -1) {
-  		printf("Error opening %s\n", serial_port);
-  		exit(1);
-	}
-	while(1) {
-		read(fd, &data[i], 1);
-		if(data[i] == '\n') {
-			break;
-		}
-		i++;
-	}
-	
-	*size = i;
-	
-	close(fd);
 }

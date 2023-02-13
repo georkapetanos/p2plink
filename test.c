@@ -8,12 +8,15 @@ int main(int argc, char *argv[]) {
 	config_dataT config;
 	char str[256] = "boat,2,cat,1";
 	char *json_string = NULL;
+	int serial;
 
 	printf("Argument passed is: %s\n", str);
 	read_configuration_file(&config);
 	json_string = (char *) malloc(MAX_STRING_SIZE * sizeof(char));
 	construct_json_data(str, config.uuid, &json_string);
-	serial_transmit((unsigned char *) json_string, strlen(json_string), "/dev/ttyUSB0");
+	serial_init("/dev/ttyUSB0", &serial);
+	serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
+	serial_close(&serial);
 	
 	free(json_string);
 

@@ -6,7 +6,7 @@
 
 static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	char *str, *json_string = NULL, *serial_port;
-	int count;
+	int count, serial;
 	config_dataT config;
 	char *checksum = (char *) malloc(3 * sizeof(unsigned char));
 
@@ -19,7 +19,9 @@ static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	construct_json_str(str, config.uuid, &json_string);
 	checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
 	embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
-	serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
+	serial_init(serial_port, &serial);
+	serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
+	serial_close(&serial);
 	
 	free(json_string);
 	return PyLong_FromLong(0);
