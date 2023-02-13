@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
 	unsigned char *rx_buf;
 	int rx_size;
 	bool use_encryption = false;
+	int serial;
 		
 	read_configuration_file(&config);
 	strcpy(serial_port, config.serial_device);
@@ -77,10 +78,13 @@ int main(int argc, char *argv[]) {
 			}
 		} else if((strncmp(argv[i], "-s", 2) == 0) && (argc - 1 > i)) {
 			if(argv[i + 1][0] != '-') {
-				strcpy(command, "stty -F ");
+				/*strcpy(command, "stty -F ");
 				strcat(command, serial_port);
 				strcat(command, " -echo");
-				system(command);
+				system(command);*/
+				
+				serial_init(serial_port, &serial);
+				
 				construct_json_str(argv[i+1], config.uuid, &json_string);
 				checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
 				//printf("calculated checksum %s.\n", checksum);
@@ -90,10 +94,15 @@ int main(int argc, char *argv[]) {
 				if(use_encryption) {
 					encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
 					hex_print(encrypted_text, encrypted_text_len);
-					serial_transmit(encrypted_text, encrypted_text_len, serial_port);
+					//serial_transmit(encrypted_text, encrypted_text_len, serial_port);
+					serial_tx(serial, encrypted_text, encrypted_text_len);
 				} else {
-					serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
+					//serial_transmit((unsigned char *) json_string, strlen(json_string), serial_port);
+					serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
 				}
+				
+				serial_close(&serial);
+				
 				i++;
 			} else {
 				printf("Invalid Syntax\n");
@@ -101,14 +110,17 @@ int main(int argc, char *argv[]) {
 		} else if(strncmp(argv[i], "-r", 2) == 0) {
 			mqtt_setup();
 			
-			strcpy(command, "stty -F ");
+			serial_init(serial_port, &serial);
+			
+			/*strcpy(command, "stty -F ");
 			strcat(command, serial_port);
 			strcat(command, " -echo");
-			system(command);
+			system(command);*/
 		
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
 			while(1) {
-				serial_receive(rx_buf, &rx_size, serial_port);
+				//serial_receive(rx_buf, &rx_size, serial_port);
+				serial_rx(serial, rx_buf, &rx_size);
 				if(use_encryption) {
 					decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
 					printf("decrypted data: %s\n", decrypted_text);
@@ -124,6 +136,9 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			free(rx_buf);
+				
+			serial_close(&serial);
+			
 			i++;
 		} else if((strncmp(argv[i], "-t", 2) == 0) && (argc - 1 > i)) {
 			strcpy(serial_port, argv[i+1]);

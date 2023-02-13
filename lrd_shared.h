@@ -23,5 +23,9 @@ void read_configuration_file(config_dataT *config);
 void construct_json_data(char *data, char *uuid, char **json_output);
 void serial_transmit(unsigned char *data, int size, char *serial_port);
 void serial_receive(unsigned char *data, int *size, char *serial_port);
+void serial_init(char *serial_port, int *serial);
+void serial_rx(int serial, unsigned char *data, int *size);
+void serial_tx(int serial, unsigned char *data, int size);
+void serial_close(int *serial);
 
 #endif
