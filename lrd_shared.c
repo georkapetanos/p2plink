@@ -273,7 +273,7 @@ void serial_rx_imdreturn(int serial, unsigned char *data, int *size) {
 	*size = 0;
 	while(1) {
 		rx_size = read(serial, &data[*size], 4096);
-		printf("rx_size = %d\n", rx_size);
+		//printf("rx_size = %d\n", rx_size);
 		if(rx_size == 0) {
 			break;
 		}

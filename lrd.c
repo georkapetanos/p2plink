@@ -34,7 +34,7 @@ void construct_json_command(char *command, char *uuid, char **json_output) {
 int main(int argc, char *argv[]) {
 	config_dataT config;
 	int i, j, rx_size, serial, encrypted_text_len = 0, decrypted_text_len = 0;
-	char *json_string = NULL, serial_port[64], *checksum = NULL, *ack_string = NULL;
+	char *json_string = NULL, serial_port[64], *checksum = NULL, *ack_string = NULL, *strstrreturn = NULL;
 	unsigned char encrypted_text[MAX_MSG_BUFFER], decrypted_text[MAX_MSG_BUFFER], *rx_buf;
 	bool use_encryption = false;
 		
@@ -98,7 +98,12 @@ int main(int argc, char *argv[]) {
 					for(j = 0; j < 3; j++) {
 						serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
 						if(rx_size !=0) { //checksum received;
-							printf("ack received: %s\n", ack_string);
+							strstrreturn = strstr(ack_string, "chksum");
+							if((strstrreturn != NULL) && (rx_size > 24)) {
+								if(strncmp(strstrreturn + 9, checksum, 2) == 0) {
+									printf("ACK received and OK: %s\n", ack_string);
+								}
+							}
 							break;
 						}
 					}
@@ -126,14 +131,14 @@ int main(int argc, char *argv[]) {
 					//send not-acknowledgement
 					get_checksum(rx_buf, rx_size, checksum);
 					format_ack(serial, checksum, &ack_string, false);
-					//serial_tx(serial, (unsigned char *) ack_string, sizeof(ack_string));
+					serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
 					printf("ack: %s\n", ack_string);
 				} else {
 					//send acknowledgement
 					get_checksum(rx_buf, rx_size, checksum);
 					format_ack(serial, checksum, &ack_string, true);
-					serial_tx(serial, (unsigned char *) ack_string, sizeof(ack_string));
-					printf("ack: %s\n", ack_string);
+					serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
+					//printf("ack: %s, size=%ld\n", ack_string, strlen(ack_string));
 					
 					remove_checksum(rx_buf, rx_size);
 					rx_size = rx_size - 2;
