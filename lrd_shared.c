@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
@@ -79,6 +80,13 @@ void embed_checksum(unsigned char *data, int size, char *checksum) {
 	data[size] = checksum[0];
 	data[size + 1] = checksum[1];
 	data[size + 2] = '\0';
+}
+
+void get_checksum(unsigned char *data, int size, char *checksum) {
+	//there is no termination null character, last character is new line
+	checksum[0] = data[size - 2];
+	checksum[1] = data[size - 1];
+	checksum[2] = '\0';
 }
 
 void remove_checksum(unsigned char *data, int size) {
@@ -264,4 +272,19 @@ void serial_tx(int serial, unsigned char *data, int size) {
 
 void serial_close(int *serial) {
 	close(*serial);
+}
+
+void format_ack(int serial, char *checksum, char **json_output, bool is_ack) {
+	json_rootT *root;
+	
+	root = json_init();
+	json_append_object(root, "type", "0");
+	json_append_object(root, "chksum", checksum);
+	if(is_ack) {
+		json_append_object(root, "ACK", "1");
+	} else {
+		json_append_object(root, "ACK", "-1");
+	}
+	json_to_string(root, *json_output, false);
+	json_free(root);
 }

@@ -33,8 +33,8 @@ void construct_json_command(char *command, char *uuid, char **json_output) {
 
 int main(int argc, char *argv[]) {
 	config_dataT config;
-	int i, rx_size, serial, encrypted_text_len = 0, decrypted_text_len = 0;
-	char *json_string = NULL, serial_port[64], *checksum = NULL;
+	int i, j, rx_size, serial, encrypted_text_len = 0, decrypted_text_len = 0;
+	char *json_string = NULL, serial_port[64], *checksum = NULL, *ack_string = NULL;
 	unsigned char encrypted_text[MAX_MSG_BUFFER], decrypted_text[MAX_MSG_BUFFER], *rx_buf;
 	bool use_encryption = false;
 		
@@ -42,7 +42,8 @@ int main(int argc, char *argv[]) {
 	strcpy(serial_port, config.serial_device);
 	
 	json_string = (char *) malloc(MAX_STRING_SIZE * sizeof(char));
-	checksum = (char *) malloc(3 * sizeof(unsigned char));
+	ack_string = (char *) malloc(48 * sizeof(char));
+	checksum = (char *) malloc(3 * sizeof(char));
 	
 	if(argc < 2) {
 		printf("Usage: ./lrd -options\n");
@@ -89,10 +90,18 @@ int main(int argc, char *argv[]) {
 				if(use_encryption) {
 					encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
 					hex_print(encrypted_text, encrypted_text_len);
-					printf("encrypted_text_len = %d\n", encrypted_text_len);
+					//printf("encrypted_text_len = %d\n", encrypted_text_len);
 					serial_tx(serial, encrypted_text, encrypted_text_len);
 				} else {
 					serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
+					//wait approximately 3 seconds for response
+					for(j = 0; j < 3; j++) {
+						serial_rx(serial, (unsigned char *) ack_string, &rx_size);
+						if(rx_size !=0) { //checksum received;
+							printf("ack received: %s\n", ack_string);
+							break;
+						}
+					}
 				}
 				
 				serial_close(&serial);
@@ -114,7 +123,18 @@ int main(int argc, char *argv[]) {
 				if(checksum_integrity_check(rx_buf, rx_size)) {
 					//checksum doesn't match, drop packet
 					printf("Dropping 1 packet, wrong checksum\n");
+					//send not-acknowledgement
+					get_checksum(rx_buf, rx_size, checksum);
+					format_ack(serial, checksum, &ack_string, false);
+					//serial_tx(serial, (unsigned char *) ack_string, sizeof(ack_string));
+					printf("ack: %s\n", ack_string);
 				} else {
+					//send acknowledgement
+					get_checksum(rx_buf, rx_size, checksum);
+					format_ack(serial, checksum, &ack_string, true);
+					//serial_tx(serial, (unsigned char *) ack_string, sizeof(ack_string));
+					printf("ack: %s\n", ack_string);
+					
 					remove_checksum(rx_buf, rx_size);
 					rx_size = rx_size - 2;
 					publish_message((char *) rx_buf, rx_size);
@@ -138,6 +158,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	free(json_string);
+	free(ack_string);
 	free(checksum);
 	
 	return 0;

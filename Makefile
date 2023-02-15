@@ -4,7 +4,7 @@ CFLAGS = -Wall -g
 
 LDFLAGS =  -lmosquitto -luuid -lcrypto
 
-lrd: lrd.o lib_lrdshared.a test python_bind
+lrd: lrd.o lib_lrdshared.a
 	$(CC) $(CFLAGS) lrd.o lib_lrdshared.a -o lrd $(LDFLAGS)
 
 lrd_shared.o: lrd_shared.c lrd_shared.h
@@ -32,7 +32,7 @@ test.o: test.c
 	$(CC) $(CFLAGS) -c test.c -o test.o
 
 python_bind: setup.py python_bind.c lib_lrdshared.a
-	CC=gcc python3 setup.py build
+	python3 setup.py build
 	cp build/lib.*/lrd*.so ./
 
 clean:
