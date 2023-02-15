@@ -92,6 +92,22 @@ int main(int argc, char *argv[]) {
 					hex_print(encrypted_text, encrypted_text_len);
 					//printf("encrypted_text_len = %d\n", encrypted_text_len);
 					serial_tx(serial, encrypted_text, encrypted_text_len);
+					//wait approximately 3 seconds for response
+					for(j = 0; j < 3; j++) {
+						serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
+						if(rx_size !=0) { //checksum received;
+							decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, (unsigned char *) ack_string, rx_size, &decrypted_text_len);
+							memcpy(ack_string, decrypted_text, decrypted_text_len);
+							rx_size = decrypted_text_len - 1; //minus one because of null termination character
+							strstrreturn = strstr(ack_string, "chksum");
+							if((strstrreturn != NULL) && (rx_size > 24)) {
+								if(strncmp(strstrreturn + 9, checksum, 2) == 0) {
+									printf("ACK received and OK: %s\n", ack_string);
+								}
+							}
+							break;
+						}
+					}
 				} else {
 					serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
 					//wait approximately 3 seconds for response
@@ -131,13 +147,23 @@ int main(int argc, char *argv[]) {
 					//send not-acknowledgement
 					get_checksum(rx_buf, rx_size, checksum);
 					format_ack(serial, checksum, &ack_string, false);
-					serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
-					printf("ack: %s\n", ack_string);
+					if(use_encryption) {
+						encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) ack_string, encrypted_text, &encrypted_text_len);
+						serial_tx(serial, encrypted_text, encrypted_text_len);
+					} else {
+						serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
+					}
+					//printf("ack: %s\n", ack_string);
 				} else {
 					//send acknowledgement
 					get_checksum(rx_buf, rx_size, checksum);
 					format_ack(serial, checksum, &ack_string, true);
-					serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
+					if(use_encryption) {
+						encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) ack_string, encrypted_text, &encrypted_text_len);
+						serial_tx(serial, encrypted_text, encrypted_text_len);
+					} else {
+						serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
+					}
 					//printf("ack: %s, size=%ld\n", ack_string, strlen(ack_string));
 					
 					remove_checksum(rx_buf, rx_size);
