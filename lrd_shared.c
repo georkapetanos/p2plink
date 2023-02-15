@@ -266,6 +266,21 @@ void serial_rx(int serial, unsigned char *data, int *size) {
 	}
 }
 
+//return immediately rx, used for receiving acks
+void serial_rx_imdreturn(int serial, unsigned char *data, int *size) {
+	int rx_size = 0;	
+	
+	*size = 0;
+	while(1) {
+		rx_size = read(serial, &data[*size], 4096);
+		printf("rx_size = %d\n", rx_size);
+		if(rx_size == 0) {
+			break;
+		}
+		*size += rx_size;
+	}
+}
+
 void serial_tx(int serial, unsigned char *data, int size) {
 	write(serial, data, size);
 }

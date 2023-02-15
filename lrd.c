@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 					serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
 					//wait approximately 3 seconds for response
 					for(j = 0; j < 3; j++) {
-						serial_rx(serial, (unsigned char *) ack_string, &rx_size);
+						serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
 						if(rx_size !=0) { //checksum received;
 							printf("ack received: %s\n", ack_string);
 							break;
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 					//send acknowledgement
 					get_checksum(rx_buf, rx_size, checksum);
 					format_ack(serial, checksum, &ack_string, true);
-					//serial_tx(serial, (unsigned char *) ack_string, sizeof(ack_string));
+					serial_tx(serial, (unsigned char *) ack_string, sizeof(ack_string));
 					printf("ack: %s\n", ack_string);
 					
 					remove_checksum(rx_buf, rx_size);

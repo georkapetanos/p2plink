@@ -28,5 +28,6 @@ void serial_rx(int serial, unsigned char *data, int *size);
 void serial_tx(int serial, unsigned char *data, int size);
 void serial_close(int *serial);
 void format_ack(int serial, char *checksum, char **json_output, bool is_ack);
+void serial_rx_imdreturn(int serial, unsigned char *data, int *size);
 
 #endif
