@@ -46,7 +46,7 @@ int checksum_integrity_check(unsigned char *data, int size) {
 	checksum[1] = data[size - 1];
 	checksum[2] = '\0';
 	
-	printf("rx_buf:\n");
+	printf("rx_buf: ");
 	for(i = 0; i < size; i++) {
 		printf("%c", data[i]);
 	}

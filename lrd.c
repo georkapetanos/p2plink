@@ -8,7 +8,6 @@
 #include "json.h"
 #include "mqtt.h"
 #include "crypto.h"
-#define MAX_MSG_BUFFER 4096
 #define USAGE_MSG "Usage: lrd [<arguments>]\n\n-h\t\tUsage message\n-c\t\tTransmit command\n-d <data>\tTransmit custom object array\n-s <string>\tTransmit plain string\n-r\t\tReceive JSON data\n-t </dev/ttyX>\tSet Serial device\n-e\t\tEnable encryption\n"
 
 /* Transmit procedure
@@ -69,7 +68,7 @@ int main(int argc, char *argv[]) {
 				if(use_encryption) {
 					encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
 					hex_print(encrypted_text, encrypted_text_len);
-					printf("encrypted_text_len = %d\n", encrypted_text_len);
+					//printf("encrypted_text_len = %d\n", encrypted_text_len);
 					serial_tx(serial, encrypted_text, encrypted_text_len);
 				} else {
 					serial_tx(serial, (unsigned char *) json_string, strlen(json_string));

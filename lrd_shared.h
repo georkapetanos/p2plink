@@ -2,6 +2,7 @@
 #define LRD_SHARED_H
 
 #include <stdbool.h>
+#define MAX_MSG_BUFFER 4096
 
 typedef struct config_data{
 	char hostname[256];
@@ -12,7 +13,7 @@ typedef struct config_data{
 	char uuid[37];
 	char serial_device[32];
 	char encryption_key[64];
-	char encryption_iv[64];
+	char encryption_iv[32];
 } config_dataT;
 
 void checksum_generate(unsigned char *data, int size, char *checksum);
