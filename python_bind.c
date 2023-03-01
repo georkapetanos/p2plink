@@ -78,11 +78,11 @@ static PyObject *method_process_detections_str(PyObject *self, PyObject *args) {
 		}
 		iterations = atoi(token);
 		//object string is at strstr(token, " ") + 1
-		printf("iter: %d, string: %s.\n", iterations, strstr(token, " ") + 1);
+		//printf("iter: %d, string: %s.\n", iterations, strstr(token, " ") + 1);
 		occur = strstr(returned_str, strstr(token, " ") + 1);
 		if(occur != NULL) {
 			old_iterations = atoi(occur - 4);
-			printf("old_iterations = %d\n", old_iterations);
+			//printf("old_iterations = %d\n", old_iterations);
 			sprintf(new_value, "%3d", old_iterations + iterations);
 			*(occur - 4) = new_value[0];
 			*(occur - 3) = new_value[1];
