@@ -1,4 +1,7 @@
 #!/bin/bash
+# Find what keeps GPIO pins high/low
+#sudo cat /sys/kernel/debug/gpio
+
 echo 23 >/sys/class/gpio/export
 echo 24 >/sys/class/gpio/export
 echo 25 >/sys/class/gpio/export
