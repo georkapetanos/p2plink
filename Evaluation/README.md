@@ -12,7 +12,7 @@ System configured with a headless Raspberry Pi Zero, transmitting its location t
 
 #### System Diagram
 
-<img src="rpizero_gnss.png" width="600" />
+<img src="rpizero_gnss.png" width="800" />
 
 #### Box configuration
 
