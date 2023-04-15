@@ -21,7 +21,8 @@ def main():
 
 		if (msg.sentence_type == "GGA"):
 			final_data = "{:.7f}".format(msg.latitude)+" "+"{:.7f}".format(msg.longitude)+" "+str(msg.altitude)+" "+str(msg.num_sats)
-			print(final_data+" ELST: "+"{:.2f}".format(time.time() - start)+" sec")
+			#EST: Elapsed Time since Transmission
+			print(final_data+" EST: "+"{:.2f}".format(time.time() - start)+" sec")
 			if (time.time() - start > TRANSMIT_INTERVAL):
 				print("Transmitting over LoRa...")
 				lrd.transmit_encrypted(1, final_data, "/dev/ttyUSB0")
