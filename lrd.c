@@ -8,7 +8,7 @@
 #include "json.h"
 #include "mqtt.h"
 #include "crypto.h"
-#define USAGE_MSG "Usage: lrd [<arguments>]\n\n-h\t\tUsage message\n-c\t\tTransmit command\n-d <data>\tTransmit custom object array\n-s <string>\tTransmit plain string\n-r\t\tReceive JSON data\n-t </dev/ttyX>\tSet Serial device\n-e\t\tEnable encryption\n"
+#define USAGE_MSG "Usage: lrd [<arguments>]\n\n-h\t\tUsage message\n-c\t\tTransmit command\n-s <string>\tTransmit plain string\n-r\t\tReceive JSON data\n-t </dev/ttyX>\tSet Serial device\n-e\t\tEnable encryption\n"
 
 /* Transmit procedure
 * Parse input from user,
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 			} else {
 				printf("Invalid Syntax\n");
 			}
-		} else if((strncmp(argv[i], "-d", 2) == 0) && (argc - 1 > i)) {
+		} /*else if((strncmp(argv[i], "-d", 2) == 0) && (argc - 1 > i)) {
 			if(argv[i + 1][0] != '-') {
 				serial_init(serial_port, &serial);
 				construct_json_data(argv[i+1], config.uuid, &json_string);
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 			} else {
 				printf("Invalid Syntax\n");
 			}
-		} else if((strncmp(argv[i], "-s", 2) == 0) && (argc - 1 > i)) {
+		} */else if((strncmp(argv[i], "-s", 2) == 0) && (argc - 1 > i)) {
 			if(argv[i + 1][0] != '-') {				
 				serial_init(serial_port, &serial);
 				construct_json_str(argv[i+1], config.uuid, &json_string);

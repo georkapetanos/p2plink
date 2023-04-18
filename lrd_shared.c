@@ -13,6 +13,14 @@
 #define CONFIGURATION_FILENAME "./config.yaml"
 #define DEFAULT_SERIAL "/dev/ttyUSB0"
 
+/* message types
+ *
+ * 0 -> acknowledgement
+ * 1 -> command
+ * 2 -> objects (deprecated)
+ * 3 -> string
+ */
+
 char *current_timestamp() {
 	time_t now;
 	time(&now);
@@ -142,7 +150,7 @@ void read_configuration_file(config_dataT *config) {
 	fclose(filestream);
 }
 
-void construct_json_data(char *data, char *uuid, char **json_output) {
+/*void construct_json_data(char *data, char *uuid, char **json_output) {
 	int count = 0, i;
 	char *cur = data, *prev_cur = data;
 	char name[256], value[256], count_string[4];
@@ -191,18 +199,15 @@ void construct_json_data(char *data, char *uuid, char **json_output) {
 	json_append_object(root, "uuid", uuid);
 	json_to_string(root, *json_output, false);
 	json_free(root);
-}
+}*/
 
 void construct_json_str(char *data, char *uuid, char **json_output) {
-	json_rootT *root, *objects;
+	json_rootT *root;
 	
 	root = json_init();
-	objects = json_init();
-	json_append_object(root, "type", "3");
 	
-	json_append_object(objects, "objs", data);
-
-	json_append_branch(root, objects, "data");
+	json_append_object(root, "type", "3");
+	json_append_object(root, "payload", data);
 	json_append_object(root, "ts", current_timestamp());
 	json_append_object(root, "uuid", uuid);
 	json_to_string(root, *json_output, false);
@@ -303,3 +308,7 @@ void format_ack(int serial, char *checksum, char **json_output, bool is_ack) {
 	json_to_string(root, *json_output, false);
 	json_free(root);
 }
+
+/*void lora_to_mqtt_translate(unsigned char *lora_message, unsigned char *mqtt_message) {
+
+}*/
