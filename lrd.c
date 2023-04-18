@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 	strcpy(serial_port, config.serial_device);
 	
 	json_string = (char *) malloc(MAX_STRING_SIZE * sizeof(char));
-	ack_string = (char *) malloc(48 * sizeof(char));
+	ack_string = (char *) malloc(32 * sizeof(char));
 	checksum = (char *) malloc(3 * sizeof(char));
 	
 	if(argc < 2) {
@@ -108,9 +108,7 @@ int main(int argc, char *argv[]) {
 			serial_init(serial_port, &serial);
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
 			mqtt_message_buf = malloc(MAX_MSG_BUFFER*sizeof(char));
-			//mqtt_message_buf[0] = '\0';
 			while(1) {
-				//mqtt_message_buf[0] = '\0';
 				for(int counter = 0; counter < MAX_MSG_BUFFER; counter++) {
 					mqtt_message_buf[counter] = 0;
 				}

@@ -100,7 +100,6 @@ void get_checksum(unsigned char *data, int size, char *checksum) {
 void remove_checksum(unsigned char *data, int size) {
 	data[size - 2] = '\n';
 	//data[size - 1] = '\0';
-	//size -= 2;
 }
 
 void read_configuration_file(config_dataT *config) {
@@ -299,25 +298,36 @@ static char *last_strstr(const char *haystack, const char *needle)
     return result;
 }
 
+/* JSON Initials
+ * c -> class, message class type
+ * p -> payload, message data payload
+ * t -> timestamp, timestamp from transmitter
+ * u -> uuid
+ *
+ * x -> checksum, on acknowlegdement packets
+ * a -> ack status, on acknowlegdement packets
+ */
+
 void lora_str_to_mqtt_translate(char *lora_message, char *mqtt_message) {
 	char *occur, *last_occur;
 	
-	//printf("\n1->%s\n", lora_message);
-	//printf("\n2->%s\n", mqtt_message);
-	
-	//mqtt_message[0] = '\0';
-	occur = strstr(lora_message, "\"c\"");
-	strncpy(mqtt_message, lora_message, occur - lora_message);
-	strcat(mqtt_message, "\"class\"");
-	last_occur = strstr(lora_message, "\"p\"");
-	strncat(mqtt_message, occur + 3, last_occur - (occur + 3));
-	strcat(mqtt_message, "\"payload\"");
-	occur = last_strstr(lora_message, "\"t\"");
-	strncat(mqtt_message, last_occur + 3, occur - (last_occur + 3));
-	strcat(mqtt_message, "\"timestamp\"");
-	last_occur = strstr(lora_message, "\"u\"");
-	strncat(mqtt_message, occur + 3, last_occur - (occur + 3));
-	strcat(mqtt_message, "\"uuid\"");
-	strcat(mqtt_message, last_occur + 3);
-
+	//failsafe in case message class is not "c", string type
+	if(strncmp(lora_message, "{\"c\":\"3\"", 8) == 0) {
+		occur = strstr(lora_message, "\"c\"");
+		strncpy(mqtt_message, lora_message, occur - lora_message);
+		strcat(mqtt_message, "\"class\"");
+		last_occur = strstr(lora_message, "\"p\"");
+		strncat(mqtt_message, occur + 3, last_occur - (occur + 3));
+		strcat(mqtt_message, "\"payload\"");
+		occur = last_strstr(lora_message, "\"t\"");
+		strncat(mqtt_message, last_occur + 3, occur - (last_occur + 3));
+		strcat(mqtt_message, "\"timestamp\"");
+		last_occur = strstr(lora_message, "\"u\"");
+		strncat(mqtt_message, occur + 3, last_occur - (occur + 3));
+		strcat(mqtt_message, "\"uuid\"");
+		strcat(mqtt_message, last_occur + 3);
+	}
+	else {
+		strcpy(mqtt_message, lora_message);
+	}
 }
