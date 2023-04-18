@@ -30,5 +30,6 @@ void serial_tx(int serial, unsigned char *data, int size);
 void serial_close(int *serial);
 void format_ack(int serial, char *checksum, char **json_output, bool is_ack);
 void serial_rx_imdreturn(int serial, unsigned char *data, int *size);
+void lora_str_to_mqtt_translate(char *lora_message, char *mqtt_message);
 
 #endif

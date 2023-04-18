@@ -33,7 +33,7 @@ void construct_json_command(char *command, char *uuid, char **json_output) {
 int main(int argc, char *argv[]) {
 	config_dataT config;
 	int i, j, rx_size, serial, encrypted_text_len = 0, decrypted_text_len = 0;
-	char *json_string = NULL, serial_port[64], *checksum = NULL, *ack_string = NULL, *strstrreturn = NULL;
+	char *json_string = NULL, serial_port[64], *checksum = NULL, *ack_string = NULL, *strstrreturn = NULL, *mqtt_message_buf;
 	unsigned char encrypted_text[MAX_MSG_BUFFER], decrypted_text[MAX_MSG_BUFFER], *rx_buf;
 	bool use_encryption = false;
 		
@@ -133,7 +133,13 @@ int main(int argc, char *argv[]) {
 			mqtt_setup();
 			serial_init(serial_port, &serial);
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
+			mqtt_message_buf = malloc(MAX_MSG_BUFFER*sizeof(char));
+			//mqtt_message_buf[0] = '\0';
 			while(1) {
+				//mqtt_message_buf[0] = '\0';
+				for(int counter = 0; counter < MAX_MSG_BUFFER; counter++) {
+					mqtt_message_buf[counter] = 0;
+				}
 				serial_rx(serial, rx_buf, &rx_size);
 				if(use_encryption) {
 					decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
@@ -167,7 +173,10 @@ int main(int argc, char *argv[]) {
 					
 					remove_checksum(rx_buf, rx_size);
 					rx_size = rx_size - 2;
-					publish_message((char *) rx_buf, rx_size);
+					rx_buf[rx_size] = '\0';
+					lora_str_to_mqtt_translate((char *) rx_buf, mqtt_message_buf);
+					//printf("mqtt_buf: %s\n", mqtt_message_buf);
+					publish_message(mqtt_message_buf, strlen(mqtt_message_buf));
 				}
 			}
 			free(rx_buf);
