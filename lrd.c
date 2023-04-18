@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
 						} else {
 							serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
 						}
-						printf("ack: %s, size=%ld\n", ack_string, strlen(ack_string));
+						//printf("ack: %s, size=%ld\n", ack_string, strlen(ack_string));
 					}
 					
 					remove_checksum(rx_buf, rx_size);
