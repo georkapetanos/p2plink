@@ -86,9 +86,9 @@ int main(int argc, char *argv[]) {
 						for(j = 0; j < 3; j++) {
 							serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
 							if(rx_size !=0) { //checksum received;
-								strstrreturn = strstr(ack_string, "chksum");
+								strstrreturn = strstr(ack_string, "\"x\"");
 								if((strstrreturn != NULL) && (rx_size > 17)) {
-									if(strncmp(strstrreturn + 9, checksum, 2) == 0) {
+									if(strncmp(strstrreturn + 5, checksum, 2) == 0) {
 										printf("ACK received and OK: %s\n", ack_string);
 									}
 								}
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 						} else {
 							serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
 						}
-						//printf("ack: %s, size=%ld\n", ack_string, strlen(ack_string));
+						printf("ack: %s, size=%ld\n", ack_string, strlen(ack_string));
 					}
 					
 					remove_checksum(rx_buf, rx_size);
