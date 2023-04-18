@@ -19,24 +19,15 @@
 * TODO: command relay receiver implementation
 */
 
-void construct_json_command(char *command, char *uuid, char **json_output) {
-	json_rootT *root;
-	
-	root = json_init();
-	json_append_object(root, "type", "1");
-	json_append_object(root, "exec", command);
-	json_append_object(root, "uuid", uuid);
-	json_append_object(root, "ts", "16:17:31");
-	//*json_output = json_to_string(root, false);
-}
-
 int main(int argc, char *argv[]) {
 	config_dataT config;
 	int i, j, rx_size, serial, encrypted_text_len = 0, decrypted_text_len = 0;
 	char *json_string = NULL, serial_port[64], *checksum = NULL, *ack_string = NULL, *strstrreturn = NULL, *mqtt_message_buf;
 	unsigned char encrypted_text[MAX_MSG_BUFFER], decrypted_text[MAX_MSG_BUFFER], *rx_buf;
 	bool use_encryption = false;
-		
+	
+	//default to acknowledge_packets false if no preference is set
+	config.acknowledge_packets = false;
 	read_configuration_file(&config);
 	strcpy(serial_port, config.serial_device);
 	
@@ -58,28 +49,7 @@ int main(int argc, char *argv[]) {
 			} else {
 				printf("Invalid Syntax\n");
 			}
-		} /*else if((strncmp(argv[i], "-d", 2) == 0) && (argc - 1 > i)) {
-			if(argv[i + 1][0] != '-') {
-				serial_init(serial_port, &serial);
-				construct_json_data(argv[i+1], config.uuid, &json_string);
-				checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
-				embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
-				printf("json: %s\n", json_string);
-				if(use_encryption) {
-					encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
-					hex_print(encrypted_text, encrypted_text_len);
-					//printf("encrypted_text_len = %d\n", encrypted_text_len);
-					serial_tx(serial, encrypted_text, encrypted_text_len);
-				} else {
-					serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
-				}
-				
-				serial_close(&serial);
-				i++;
-			} else {
-				printf("Invalid Syntax\n");
-			}
-		} */else if((strncmp(argv[i], "-s", 2) == 0) && (argc - 1 > i)) {
+		} else if((strncmp(argv[i], "-s", 2) == 0) && (argc - 1 > i)) {
 			if(argv[i + 1][0] != '-') {				
 				serial_init(serial_port, &serial);
 				construct_json_str(argv[i+1], config.uuid, &json_string);
@@ -91,35 +61,39 @@ int main(int argc, char *argv[]) {
 					hex_print(encrypted_text, encrypted_text_len);
 					//printf("encrypted_text_len = %d\n", encrypted_text_len);
 					serial_tx(serial, encrypted_text, encrypted_text_len);
-					//wait approximately 3 seconds for response
-					for(j = 0; j < 3; j++) {
-						serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
-						if(rx_size !=0) { //checksum received;
-							decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, (unsigned char *) ack_string, rx_size, &decrypted_text_len);
-							memcpy(ack_string, decrypted_text, decrypted_text_len);
-							rx_size = decrypted_text_len - 1; //minus one because of null termination character
-							strstrreturn = strstr(ack_string, "chksum");
-							if((strstrreturn != NULL) && (rx_size > 24)) {
-								if(strncmp(strstrreturn + 9, checksum, 2) == 0) {
-									printf("ACK received and OK: %s\n", ack_string);
+					if(config.acknowledge_packets) {
+						//wait approximately 3 seconds for response
+						for(j = 0; j < 3; j++) {
+							serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
+							if(rx_size !=0) { //checksum received;
+								decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, (unsigned char *) ack_string, rx_size, &decrypted_text_len);
+								memcpy(ack_string, decrypted_text, decrypted_text_len);
+								rx_size = decrypted_text_len - 1; //minus one because of null termination character
+								strstrreturn = strstr(ack_string, "\"x\"");
+								if((strstrreturn != NULL) && (rx_size > 17)) {
+									if(strncmp(strstrreturn + 5, checksum, 2) == 0) {
+										printf("ACK received and OK: %s\n", ack_string);
+									}
 								}
+								break;
 							}
-							break;
 						}
 					}
 				} else {
 					serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
-					//wait approximately 3 seconds for response
-					for(j = 0; j < 3; j++) {
-						serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
-						if(rx_size !=0) { //checksum received;
-							strstrreturn = strstr(ack_string, "chksum");
-							if((strstrreturn != NULL) && (rx_size > 24)) {
-								if(strncmp(strstrreturn + 9, checksum, 2) == 0) {
-									printf("ACK received and OK: %s\n", ack_string);
+					if(config.acknowledge_packets) {
+						//wait approximately 3 seconds for response
+						for(j = 0; j < 3; j++) {
+							serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
+							if(rx_size !=0) { //checksum received;
+								strstrreturn = strstr(ack_string, "chksum");
+								if((strstrreturn != NULL) && (rx_size > 17)) {
+									if(strncmp(strstrreturn + 9, checksum, 2) == 0) {
+										printf("ACK received and OK: %s\n", ack_string);
+									}
 								}
+								break;
 							}
-							break;
 						}
 					}
 				}
@@ -160,16 +134,18 @@ int main(int argc, char *argv[]) {
 					}
 					//printf("ack: %s\n", ack_string);
 				} else {
-					//send acknowledgement
-					get_checksum(rx_buf, rx_size, checksum);
-					format_ack(serial, checksum, &ack_string, true);
-					if(use_encryption) {
-						encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) ack_string, encrypted_text, &encrypted_text_len);
-						serial_tx(serial, encrypted_text, encrypted_text_len);
-					} else {
-						serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
+					if(config.acknowledge_packets) {
+						//send acknowledgement
+						get_checksum(rx_buf, rx_size, checksum);
+						format_ack(serial, checksum, &ack_string, true);
+						if(use_encryption) {
+							encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) ack_string, encrypted_text, &encrypted_text_len);
+							serial_tx(serial, encrypted_text, encrypted_text_len);
+						} else {
+							serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
+						}
+						//printf("ack: %s, size=%ld\n", ack_string, strlen(ack_string));
 					}
-					//printf("ack: %s, size=%ld\n", ack_string, strlen(ack_string));
 					
 					remove_checksum(rx_buf, rx_size);
 					rx_size = rx_size - 2;

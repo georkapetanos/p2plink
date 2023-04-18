@@ -107,6 +107,7 @@ void read_configuration_file(config_dataT *config) {
 	FILE *filestream = NULL;
 	char line[256];
 	char *uuid;
+	char read_use_ack[6];
 
 	filestream = fopen(CONFIGURATION_FILENAME, "r");
 
@@ -119,6 +120,7 @@ void read_configuration_file(config_dataT *config) {
 		fwrite(uuid, 36, 1, filestream);
 		fwrite("\nserial: ", 9, 1, filestream);
 		fwrite(DEFAULT_SERIAL, 12, 1, filestream);
+		fwrite("\nacknowledge_packets: false", 27, 1, filestream);
 		fwrite("\n", 1, 1, filestream);
 		rewind(filestream);
 		free(uuid);
@@ -136,6 +138,15 @@ void read_configuration_file(config_dataT *config) {
 			strcpy(config->serial_device, &line[8]);
 			//write null termination at last position from string, so as to overwrite new line character copied from above.
 			config->serial_device[strlen(config->serial_device) - 1] = '\0';
+		} else if(strncmp(line, "acknowledge_packets:", 20) == 0) {
+			strncpy(read_use_ack, &line[21], 5);
+			if(strncmp(read_use_ack, "true", 4) == 0) {
+				config->acknowledge_packets = true;
+			} else if(strncmp(read_use_ack, "false", 4) == 0){
+				config->acknowledge_packets = false;
+			} else {
+				config->acknowledge_packets = false;
+			}
 		} else if(strncmp(line, "encryption_key:", 15) == 0) {
 			strcpy(config->encryption_key, &line[16]);
 			//write null termination at last position from string, so as to overwrite new line character copied from above.
@@ -150,57 +161,6 @@ void read_configuration_file(config_dataT *config) {
 	fclose(filestream);
 }
 
-/*void construct_json_data(char *data, char *uuid, char **json_output) {
-	int count = 0, i;
-	char *cur = data, *prev_cur = data;
-	char name[256], value[256], count_string[4];
-	json_rootT *root, *objects;
-	
-	root = json_init();
-	objects = json_init();
-	json_append_object(root, "type", "2");
-	
-	//count json parameters
-	for(i = 0; i < strlen(data); i++) {
-		if(data[i] == ',') {
-			count++;
-		}
-	}
-	count = (count / 2) + 1;
-	sprintf(count_string, "%d", count);
-	json_append_object(root, "size", count_string);
-	
-	do {
-		cur = strchr(cur, ',');
-		//printf("%s, %ld\n", cur, cur-prev_cur);
-		if(cur == NULL) {
-			break;
-		}
-		strncpy(name, prev_cur, cur-prev_cur);
-		name[cur-prev_cur] = '\0';
-		prev_cur = cur + 1;
-		cur = strchr(cur + 1, ',');
-		if(cur == NULL) {
-			strcpy(value, prev_cur);
-			json_append_object(objects, name, value);
-			break;
-		}
-		else {
-			strncpy(value, prev_cur, cur-prev_cur);
-			value[cur-prev_cur] = '\0';
-			prev_cur = cur + 1;
-			cur = cur + 1;
-			json_append_object(objects, name, value);
-		}
-	} while(cur != NULL);
-
-	json_append_branch(root, objects, "objs");
-	json_append_object(root, "ts", current_timestamp());
-	json_append_object(root, "uuid", uuid);
-	json_to_string(root, *json_output, false);
-	json_free(root);
-}*/
-
 void construct_json_str(char *data, char *uuid, char **json_output) {
 	json_rootT *root;
 	
@@ -209,6 +169,19 @@ void construct_json_str(char *data, char *uuid, char **json_output) {
 	json_append_object(root, "c", "3");
 	json_append_object(root, "p", data);
 	json_append_object(root, "t", current_timestamp());
+	json_append_object(root, "u", uuid);
+	json_to_string(root, *json_output, false);
+	json_free(root);
+}
+
+void construct_json_command(char *command, char *uuid, char **json_output) {
+	json_rootT *root;
+	
+	root = json_init();
+	
+	json_append_object(root, "c", "1");
+	json_append_object(root, "p", command);
+	json_append_object(root, "t", "16:17:31");
 	json_append_object(root, "u", uuid);
 	json_to_string(root, *json_output, false);
 	json_free(root);
@@ -298,12 +271,12 @@ void format_ack(int serial, char *checksum, char **json_output, bool is_ack) {
 	json_rootT *root;
 	
 	root = json_init();
-	json_append_object(root, "type", "0");
-	json_append_object(root, "chksum", checksum);
+	json_append_object(root, "c", "0");
+	json_append_object(root, "x", checksum);
 	if(is_ack) {
-		json_append_object(root, "ack", "1");
+		json_append_object(root, "a", "1");
 	} else {
-		json_append_object(root, "ack", "-1");
+		json_append_object(root, "a", "-1");
 	}
 	json_to_string(root, *json_output, false);
 	json_free(root);

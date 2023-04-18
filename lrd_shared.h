@@ -12,6 +12,7 @@ typedef struct config_data{
 	char password[64];
 	char uuid[37];
 	char serial_device[32];
+	bool acknowledge_packets;
 	char encryption_key[64];
 	char encryption_iv[32];
 } config_dataT;
@@ -22,8 +23,8 @@ void embed_checksum(unsigned char *data, int size, char *checksum);
 void get_checksum(unsigned char *data, int size, char *checksum);
 void remove_checksum(unsigned char *data, int size);
 void construct_json_str(char *data, char *uuid, char **json_output);
+void construct_json_command(char *command, char *uuid, char **json_output);
 void read_configuration_file(config_dataT *config);
-//void construct_json_data(char *data, char *uuid, char **json_output);
 void serial_init(char *serial_port, int *serial);
 void serial_rx(int serial, unsigned char *data, int *size);
 void serial_tx(int serial, unsigned char *data, int size);
