@@ -176,9 +176,9 @@ void construct_json_str(char *data, char *uuid, char **json_output) {
 	root = json_init();
 	
 	json_append_object(root, "c", "3");
-	json_append_object(root, "p", data);
-	json_append_object(root, "t", current_timestamp());
 	json_append_object(root, "u", uuid);
+	json_append_object(root, "t", current_timestamp());
+	json_append_object(root, "p", data);
 	json_to_string(root, *json_output, false);
 	json_free(root);
 }
@@ -189,9 +189,9 @@ void construct_json_command(char *command, char *uuid, char **json_output) {
 	root = json_init();
 	
 	json_append_object(root, "c", "1");
-	json_append_object(root, "p", command);
-	json_append_object(root, "t", "16:17:31");
 	json_append_object(root, "u", uuid);
+	json_append_object(root, "t", current_timestamp());
+	json_append_object(root, "p", command);
 	json_to_string(root, *json_output, false);
 	json_free(root);
 }
@@ -291,7 +291,7 @@ void format_ack(int serial, char *checksum, char **json_output, bool is_ack) {
 	json_free(root);
 }
 
-static char *last_strstr(const char *haystack, const char *needle)
+/*static char *last_strstr(const char *haystack, const char *needle)
 {
     if (*needle == '\0')
         return (char *) haystack;
@@ -306,13 +306,13 @@ static char *last_strstr(const char *haystack, const char *needle)
     }
 
     return result;
-}
+}*/
 
 /* JSON Initials
  * c -> class, message class type
- * p -> payload, message data payload
- * t -> timestamp, timestamp from transmitter
  * u -> uuid
+ * t -> timestamp, timestamp from transmitter
+ * p -> payload, message data payload
  *
  * x -> checksum, on acknowlegdement packets
  * a -> ack status, on acknowlegdement packets
@@ -326,15 +326,15 @@ void lora_str_to_mqtt_translate(char *lora_message, char *mqtt_message) {
 		occur = strstr(lora_message, "\"c\"");
 		strncpy(mqtt_message, lora_message, occur - lora_message);
 		strcat(mqtt_message, "\"class\"");
-		last_occur = strstr(lora_message, "\"p\"");
-		strncat(mqtt_message, occur + 3, last_occur - (occur + 3));
-		strcat(mqtt_message, "\"payload\"");
-		occur = last_strstr(lora_message, "\"t\"");
-		strncat(mqtt_message, last_occur + 3, occur - (last_occur + 3));
-		strcat(mqtt_message, "\"timestamp\"");
 		last_occur = strstr(lora_message, "\"u\"");
 		strncat(mqtt_message, occur + 3, last_occur - (occur + 3));
 		strcat(mqtt_message, "\"uuid\"");
+		occur = strstr(lora_message, "\"t\"");
+		strncat(mqtt_message, last_occur + 3, occur - (last_occur + 3));
+		strcat(mqtt_message, "\"timestamp\"");
+		last_occur = strstr(lora_message, "\"p\"");
+		strncat(mqtt_message, occur + 3, last_occur - (occur + 3));
+		strcat(mqtt_message, "\"payload\"");
 		strcat(mqtt_message, last_occur + 3);
 	}
 	else {
