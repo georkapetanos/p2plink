@@ -13,7 +13,7 @@ lrd.o: lrd.c
 json.o: json.c json.h
 	$(CC) $(CFLAGS) -c json.c -o json.o
 	
-mqtt.o: mqtt.c mqtt.h
+mqtt.o: mqtt.c mqtt.h lrd_shared.h
 	$(CC) $(CFLAGS) -c mqtt.c -o mqtt.o
 	
 crypto.o: crypto.c crypto.h

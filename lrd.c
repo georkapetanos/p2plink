@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 	
 	//default to acknowledge_packets false if no preference is set
 	config.acknowledge_packets = false;
+	config.broadcast_to_mqtt = true;
 	read_configuration_file(&config);
 	strcpy(serial_port, config.serial_device);
 	
@@ -104,13 +105,15 @@ int main(int argc, char *argv[]) {
 				printf("Invalid Syntax\n");
 			}
 		} else if(strncmp(argv[i], "-r", 2) == 0) {
-			mqtt_setup();
 			serial_init(serial_port, &serial);
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
-			mqtt_message_buf = malloc(MAX_MSG_BUFFER*sizeof(char));
+			if(config.broadcast_to_mqtt) {
+				mqtt_setup();
+				mqtt_message_buf = malloc(MAX_MSG_BUFFER*sizeof(char));
+			}
 			while(1) {
-				for(int counter = 0; counter < MAX_MSG_BUFFER; counter++) {
-					mqtt_message_buf[counter] = 0;
+				if(config.broadcast_to_mqtt) {
+					memset(mqtt_message_buf, 0, MAX_MSG_BUFFER);
 				}
 				serial_rx(serial, rx_buf, &rx_size);
 				if(use_encryption) {
@@ -148,9 +151,11 @@ int main(int argc, char *argv[]) {
 					remove_checksum(rx_buf, rx_size);
 					rx_size = rx_size - 2;
 					rx_buf[rx_size] = '\0';
-					lora_str_to_mqtt_translate((char *) rx_buf, mqtt_message_buf);
-					//printf("mqtt_buf: %s\n", mqtt_message_buf);
-					publish_message(mqtt_message_buf, strlen(mqtt_message_buf));
+					if(config.broadcast_to_mqtt) {
+						lora_str_to_mqtt_translate((char *) rx_buf, mqtt_message_buf);
+						//printf("mqtt_buf: %s\n", mqtt_message_buf);
+						publish_message(mqtt_message_buf, strlen(mqtt_message_buf));
+					}
 				}
 			}
 			free(rx_buf);

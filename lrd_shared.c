@@ -106,7 +106,7 @@ void read_configuration_file(config_dataT *config) {
 	FILE *filestream = NULL;
 	char line[256];
 	char *uuid;
-	char read_use_ack[6];
+	char read_bool[6];
 
 	filestream = fopen(CONFIGURATION_FILENAME, "r");
 
@@ -120,6 +120,7 @@ void read_configuration_file(config_dataT *config) {
 		fwrite("\nserial: ", 9, 1, filestream);
 		fwrite(DEFAULT_SERIAL, 12, 1, filestream);
 		fwrite("\nacknowledge_packets: false", 27, 1, filestream);
+		fwrite("\nbroadcast_to_mqtt: true", 24, 1, filestream);
 		fwrite("\n", 1, 1, filestream);
 		rewind(filestream);
 		free(uuid);
@@ -138,13 +139,22 @@ void read_configuration_file(config_dataT *config) {
 			//write null termination at last position from string, so as to overwrite new line character copied from above.
 			config->serial_device[strlen(config->serial_device) - 1] = '\0';
 		} else if(strncmp(line, "acknowledge_packets:", 20) == 0) {
-			strncpy(read_use_ack, &line[21], 5);
-			if(strncmp(read_use_ack, "true", 4) == 0) {
+			strncpy(read_bool, &line[21], 5);
+			if(strncmp(read_bool, "true", 4) == 0) {
 				config->acknowledge_packets = true;
-			} else if(strncmp(read_use_ack, "false", 4) == 0){
+			} else if(strncmp(read_bool, "false", 4) == 0){
 				config->acknowledge_packets = false;
 			} else {
 				config->acknowledge_packets = false;
+			}
+		} else if(strncmp(line, "broadcast_to_mqtt:", 18) == 0) {
+			strncpy(read_bool, &line[19], 5);
+			if(strncmp(read_bool, "true", 4) == 0) {
+				config->broadcast_to_mqtt = true;
+			} else if(strncmp(read_bool, "false", 4) == 0){
+				config->broadcast_to_mqtt = false;
+			} else {
+				config->broadcast_to_mqtt = true;
 			}
 		} else if(strncmp(line, "encryption_key:", 15) == 0) {
 			strcpy(config->encryption_key, &line[16]);

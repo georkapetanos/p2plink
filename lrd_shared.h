@@ -4,15 +4,16 @@
 #include <stdbool.h>
 #define MAX_MSG_BUFFER 4096
 
-typedef struct config_data{
+typedef struct config_data{		// Default values
 	char hostname[256];
 	unsigned short port;
 	unsigned short keep_alive;
 	char username[64];
 	char password[64];
-	char uuid[37];
-	char serial_device[32];
-	bool acknowledge_packets;
+	char uuid[37];				// random UUID
+	char serial_device[32];		// /dev/ttyUSB0
+	bool acknowledge_packets;	// false
+	bool broadcast_to_mqtt;		// true
 	char encryption_key[64];
 	char encryption_iv[32];
 } config_dataT;
