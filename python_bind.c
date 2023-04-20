@@ -11,7 +11,7 @@ static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	config_dataT config;
 	char *checksum = (char *) malloc(3 * sizeof(char));
 
-	if(!PyArg_ParseTuple(args, "iss", &count, &str)) {
+	if(!PyArg_ParseTuple(args, "is", &count, &str)) {
 		return NULL;
 	}
 	printf("Argument passed is: %s\n", str);
@@ -35,7 +35,7 @@ static PyObject *method_transmit_encrypted(PyObject *self, PyObject *args) {
 	char *checksum = (char *) malloc(3 * sizeof(char));
 	unsigned char encrypted_text[MAX_MSG_BUFFER];
 
-	if(!PyArg_ParseTuple(args, "iss", &count, &str)) {
+	if(!PyArg_ParseTuple(args, "is", &count, &str)) {
 		return NULL;
 	}
 	printf("Argument passed is: %s\n", str);
