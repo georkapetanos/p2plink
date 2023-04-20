@@ -23,7 +23,7 @@ static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	serial_init(config.serial_device, &serial);
 	serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
 	serial_close(&serial);
-	
+
 	free(json_string);
 	return PyLong_FromLong(0);
 }
@@ -51,7 +51,7 @@ static PyObject *method_transmit_encrypted(PyObject *self, PyObject *args) {
 	serial_init(config.serial_device, &serial);
 	serial_tx(serial, encrypted_text, encrypted_text_len);
 	serial_close(&serial);
-	
+
 	free(json_string);
 	return PyLong_FromLong(0);
 }
@@ -63,9 +63,9 @@ static PyObject *method_process_detections_str(PyObject *self, PyObject *args) {
 	if(!PyArg_ParseTuple(args, "ss", &old_str, &new_str)) {
 		return NULL;
 	}
-	
+
 	strcpy(returned_str, old_str);
-	
+
 	token = strtok(new_str, ",");
 	if(!strncmp(token, "(no detections)", 15)) {
 		//no detections do nothing
@@ -106,7 +106,7 @@ static PyObject *method_receive_encrypted(PyObject *self, PyObject *args) {
 	config_dataT config;
 	int serial, rx_size, decrypted_text_len = 0;
 	unsigned char rx_buf[MAX_MSG_BUFFER], decrypted_text[MAX_MSG_BUFFER];
-	
+
 	read_configuration_file(&config);
 	serial_init(config.serial_device, &serial);
 	serial_rx(serial, rx_buf, &rx_size);
@@ -122,9 +122,36 @@ static PyObject *method_receive_encrypted(PyObject *self, PyObject *args) {
 		rx_buf[rx_size] = '\0';
 		return PyUnicode_FromString((char *) rx_buf);
 	}
-	//rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
-	
+
 	serial_close(&serial);
+}
+
+static PyObject *method_generate_json_str(PyObject *self, PyObject *args) {
+	char json_output[MAX_MSG_BUFFER], *data, *tmp;
+	config_dataT config;
+
+        if(!PyArg_ParseTuple(args, "s", &data)) {
+                return NULL;
+        }
+
+	read_configuration_file(&config);
+	tmp = json_output;
+	construct_json_str(data, config.uuid, &tmp);
+
+	return PyUnicode_FromString(json_output);
+}
+
+static PyObject *method_lora_str_translate(PyObject *self, PyObject *args) {
+	char mqtt_message[MAX_MSG_BUFFER], *lora_message;
+
+        if(!PyArg_ParseTuple(args, "s", &lora_message)) {
+                return NULL;
+        }
+
+	memset(mqtt_message, 0, MAX_MSG_BUFFER);
+	lora_str_to_mqtt_translate(lora_message, mqtt_message);
+
+	return PyUnicode_FromString(mqtt_message);
 }
 
 static PyMethodDef LrdMethods[] = {
@@ -132,6 +159,8 @@ static PyMethodDef LrdMethods[] = {
 	{"transmit_encrypted", method_transmit_encrypted, METH_VARARGS, "Encrypt and transmit string message"},
 	{"process_detections_str", method_process_detections_str, METH_VARARGS, "Process detections str"},
 	{"receive_encrypted", method_receive_encrypted, METH_VARARGS, "Receive and decrypt string message"},
+	{"generate_json_str", method_generate_json_str, METH_VARARGS, "Generate JSON string only without transmitting"},
+	{"lora_str_translate", method_lora_str_translate, METH_VARARGS, "Translate JSON initials from Lora to MQTT words"},
 	{NULL, NULL, 0, NULL}
 };
 
