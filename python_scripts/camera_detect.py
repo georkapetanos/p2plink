@@ -54,7 +54,7 @@ def main():
 		if (time.time() - start > TRANSMIT_INTERVAL):
 			#transmit detections
 			detections = re.sub(r"\s+", " ", detections)
-			lrd.transmit_encrypted(1, detections, "/dev/serial0")
+			lrd.transmit_encrypted(1, detections)
 			detections = ""
 			start = time.time()
 

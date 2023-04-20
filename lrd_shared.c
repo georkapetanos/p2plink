@@ -311,7 +311,7 @@ void format_ack(int serial, char *checksum, char **json_output, bool is_ack) {
 /* JSON Initials
  * c -> class, message class type
  * u -> uuid
- * t -> timestamp, timestamp from transmitter
+ * t -> txtime, timestamp from transmitter
  * p -> payload, message data payload
  *
  * x -> checksum, on acknowlegdement packets
@@ -331,7 +331,7 @@ void lora_str_to_mqtt_translate(char *lora_message, char *mqtt_message) {
 		strcat(mqtt_message, "\"uuid\"");
 		occur = strstr(lora_message, "\"t\"");
 		strncat(mqtt_message, last_occur + 3, occur - (last_occur + 3));
-		strcat(mqtt_message, "\"timestamp\"");
+		strcat(mqtt_message, "\"txtime\"");
 		last_occur = strstr(lora_message, "\"p\"");
 		strncat(mqtt_message, occur + 3, last_occur - (occur + 3));
 		strcat(mqtt_message, "\"payload\"");

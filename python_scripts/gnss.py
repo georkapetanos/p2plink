@@ -25,7 +25,7 @@ def main():
 			print(final_data+" EST: "+"{:.2f}".format(time.time() - start)+" sec")
 			if (time.time() - start > TRANSMIT_INTERVAL):
 				print("Transmitting over LoRa...")
-				lrd.transmit_encrypted(1, final_data, "/dev/ttyUSB0")
+				lrd.transmit_encrypted(1, final_data)
 				start = time.time()
 
 if __name__ == "__main__":

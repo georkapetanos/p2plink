@@ -6,12 +6,12 @@
 #include "crypto.h"
 
 static PyObject *method_transmit(PyObject *self, PyObject *args) {
-	char *str, *json_string = NULL, *serial_port;
+	char *str, *json_string = NULL;
 	int count, serial;
 	config_dataT config;
 	char *checksum = (char *) malloc(3 * sizeof(char));
 
-	if(!PyArg_ParseTuple(args, "iss", &count, &str, &serial_port)) {
+	if(!PyArg_ParseTuple(args, "iss", &count, &str)) {
 		return NULL;
 	}
 	printf("Argument passed is: %s\n", str);
@@ -20,7 +20,7 @@ static PyObject *method_transmit(PyObject *self, PyObject *args) {
 	construct_json_str(str, config.uuid, &json_string);
 	checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
 	embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
-	serial_init(serial_port, &serial);
+	serial_init(config.serial_device, &serial);
 	serial_tx(serial, (unsigned char *) json_string, strlen(json_string));
 	serial_close(&serial);
 	
@@ -29,13 +29,13 @@ static PyObject *method_transmit(PyObject *self, PyObject *args) {
 }
 
 static PyObject *method_transmit_encrypted(PyObject *self, PyObject *args) {
-	char *str, *json_string = NULL, *serial_port;
+	char *str, *json_string = NULL;
 	int count, serial, encrypted_text_len = 0;
 	config_dataT config;
 	char *checksum = (char *) malloc(3 * sizeof(char));
 	unsigned char encrypted_text[MAX_MSG_BUFFER];
 
-	if(!PyArg_ParseTuple(args, "iss", &count, &str, &serial_port)) {
+	if(!PyArg_ParseTuple(args, "iss", &count, &str)) {
 		return NULL;
 	}
 	printf("Argument passed is: %s\n", str);
@@ -48,7 +48,7 @@ static PyObject *method_transmit_encrypted(PyObject *self, PyObject *args) {
 	encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
 	hex_print(encrypted_text, encrypted_text_len);
 	printf("encrypted_text_len = %d\n", encrypted_text_len);
-	serial_init(serial_port, &serial);
+	serial_init(config.serial_device, &serial);
 	serial_tx(serial, encrypted_text, encrypted_text_len);
 	serial_close(&serial);
 	
