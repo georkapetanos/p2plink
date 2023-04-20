@@ -102,10 +102,36 @@ static PyObject *method_process_detections_str(PyObject *self, PyObject *args) {
 	return PyUnicode_FromString(returned_str);
 }
 
+static PyObject *method_receive_encrypted(PyObject *self, PyObject *args) {
+	config_dataT config;
+	int serial, rx_size, decrypted_text_len = 0;
+	unsigned char rx_buf[MAX_MSG_BUFFER], decrypted_text[MAX_MSG_BUFFER];
+	
+	read_configuration_file(&config);
+	serial_init(config.serial_device, &serial);
+	serial_rx(serial, rx_buf, &rx_size);
+	decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
+	memcpy(rx_buf, decrypted_text, decrypted_text_len);
+	rx_size = decrypted_text_len - 1; //minus one because of null termination character
+	if(checksum_integrity_check(rx_buf, rx_size)) {
+		printf("Dropping 1 packet, wrong checksum\n");
+		return PyUnicode_FromString("{}");
+	} else {
+		remove_checksum(rx_buf, rx_size);
+		rx_size = rx_size - 2;
+		rx_buf[rx_size] = '\0';
+		return PyUnicode_FromString((char *) rx_buf);
+	}
+	//rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
+	
+	serial_close(&serial);
+}
+
 static PyMethodDef LrdMethods[] = {
 	{"transmit", method_transmit, METH_VARARGS, "Transmit string message"},
 	{"transmit_encrypted", method_transmit_encrypted, METH_VARARGS, "Encrypt and transmit string message"},
 	{"process_detections_str", method_process_detections_str, METH_VARARGS, "Process detections str"},
+	{"receive_encrypted", method_receive_encrypted, METH_VARARGS, "Receive and decrypt string message"},
 	{NULL, NULL, 0, NULL}
 };
 
