@@ -41,11 +41,13 @@ def main():
 		payload = json_object["p"]
 
 		#Get current GNSS fix
+		serial_port.flushInput()
+		serial_port.readline()
 		while (True):
 			nmea_sentence = serial_port.readline().decode('utf-8')
 			msg = pynmea2.parse(nmea_sentence)
 			if (msg.sentence_type == "GGA"):
-				final_data = "{:.7f}".format(msg.latitude)+" "+"{:.7f}".format(msg.longitude)+" "+str(msg.altitude)+" "+str(msg.num_sats)
+				final_data = msg.timestamp.strftime("%H:%M:%S")+" "+"{:.7f}".format(msg.latitude)+" "+"{:.7f}".format(msg.longitude)+" "+str(msg.altitude)+" "+str(msg.num_sats)
 				break
 		#print(final_data)
 		new_json = lrd.generate_json_str(final_data + " " + payload)
