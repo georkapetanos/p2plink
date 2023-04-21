@@ -34,6 +34,9 @@ def main():
 	while (True):
 		json_message = lrd.receive_encrypted()
 		#print("received: "+json_message)
+		if (json_message == "{NULL}"):
+			#decryption failed, skip message
+			continue
 		json_object = json.loads(json_message)
 		payload = json_object["p"]
 

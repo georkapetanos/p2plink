@@ -110,12 +110,15 @@ static PyObject *method_receive_encrypted(PyObject *self, PyObject *args) {
 	read_configuration_file(&config);
 	serial_init(config.serial_device, &serial);
 	serial_rx(serial, rx_buf, &rx_size);
-	decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
+	if(decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len)) {
+		//decryption failed return here
+		return PyUnicode_FromString("{NULL}");
+	}
 	memcpy(rx_buf, decrypted_text, decrypted_text_len);
 	rx_size = decrypted_text_len - 1; //minus one because of null termination character
 	if(checksum_integrity_check(rx_buf, rx_size)) {
 		printf("Dropping 1 packet, wrong checksum\n");
-		return PyUnicode_FromString("{}");
+		return PyUnicode_FromString("{NULL}");
 	} else {
 		remove_checksum(rx_buf, rx_size);
 		rx_size = rx_size - 2;
