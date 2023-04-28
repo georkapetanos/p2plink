@@ -5,7 +5,7 @@ import sys, time, libcamera, signal, torch, re
 import lrd
 
 CAPTURED_IMG_PATH = "/media/ramdisk/picam.jpg"
-TRANSMIT_INTERVAL = 40
+TRANSMIT_INTERVAL = 60
 
 def camera_setup():
 	picam = Picamera2()
@@ -44,18 +44,23 @@ def main():
 	detections = ""
 
 	start = time.time()
+	processings = 0
 
 	while(True):
 		output = capture_and_process(picam, model)
 		#print(output)
 		detections = lrd.process_detections_str(detections, output)
+		processings = processings + 1
 		#print(detections)
-		print(detections + " " + str(time.time() - start))
+		print("dt = " + "{:.2f}".format(time.time() - start) + ", p = " + str(processings) + " || " + detections)
 		if (time.time() - start > TRANSMIT_INTERVAL):
 			#transmit detections
-			detections = re.sub(r"\s+", " ", detections)
+			detections = re.sub(r"\s+", " ", detections)	#replace multiple consecutive white characters
+			detections = "p=" + str(processings) + "," + detections
+			print("{:.2f}".format(processings / (time.time() - start)) + " Frames / second")
 			lrd.transmit_encrypted(1, detections)
 			detections = ""
+			processings = 0
 			start = time.time()
 
 if __name__ == "__main__":
