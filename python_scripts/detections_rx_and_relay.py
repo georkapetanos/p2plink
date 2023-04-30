@@ -26,10 +26,10 @@ def main():
 		# process payload with object detections
 		while (True):
 			detection, rest_string = rest_string.split(", ", 1)
-			size, object_name = detection.split(" ")
+			size, object_name = detection.split(" ", 1)	# max one split as the object can be composed of multiple words
 			print("Object \""+object_name+"\" "+ "{:.2f}".format(float(size) / float(nofproc)))
 			if (rest_string.find(", ") == -1):
-				size, object_name = rest_string.split(" ")
+				size, object_name = rest_string.split(" ", 1)	# max one split as the object can be composed of multiple words
 				print("Object \""+object_name+"\" "+ "{:.2f}".format(float(size) / float(nofproc)))
 				break
 		
