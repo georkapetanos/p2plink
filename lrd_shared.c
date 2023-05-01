@@ -11,7 +11,9 @@
 #include "lrd_shared.h"
 #include "json.h"
 #define CONFIGURATION_FILENAME "./config.yaml"
+#define UUID_WHITELIST_FILENAME "./uuid_whitelist.yaml"
 #define DEFAULT_SERIAL "/dev/ttyUSB0"
+#define INITIAL_UUID_WHITELIST_SIZE 4
 
 /* message types
  *
@@ -104,9 +106,7 @@ void remove_checksum(unsigned char *data, int size) {
 
 void read_configuration_file(config_dataT *config) {
 	FILE *filestream = NULL;
-	char line[256];
-	char *uuid;
-	char read_bool[6];
+	char line[256], read_bool[6], *uuid;
 
 	filestream = fopen(CONFIGURATION_FILENAME, "r");
 
@@ -121,10 +121,19 @@ void read_configuration_file(config_dataT *config) {
 		fwrite(DEFAULT_SERIAL, 12, 1, filestream);
 		fwrite("\nacknowledge_packets: false", 27, 1, filestream);
 		fwrite("\nbroadcast_to_mqtt: true", 24, 1, filestream);
+		fwrite("\nenforce_uuid_whitelist: false", 30, 1, filestream);
 		fwrite("\n", 1, 1, filestream);
 		rewind(filestream);
 		free(uuid);
 	}
+	
+	// Set default values in case no user preference is set in "config.yaml"
+	config->acknowledge_packets = false;
+	config->broadcast_to_mqtt = true;
+	config->enforce_uuid_whitelist = false;
+	config->uuid_whitelist_max = 0;
+	config->uuid_whitelist_size = 0;
+	config->uuid_whitelist = NULL;
 	
 	while(1) {
 		if(fgets(line, 256, filestream) == NULL) { //read file line by line
@@ -142,7 +151,7 @@ void read_configuration_file(config_dataT *config) {
 			strncpy(read_bool, &line[21], 5);
 			if(strncmp(read_bool, "true", 4) == 0) {
 				config->acknowledge_packets = true;
-			} else if(strncmp(read_bool, "false", 4) == 0){
+			} else if(strncmp(read_bool, "false", 5) == 0){
 				config->acknowledge_packets = false;
 			} else {
 				config->acknowledge_packets = false;
@@ -151,10 +160,19 @@ void read_configuration_file(config_dataT *config) {
 			strncpy(read_bool, &line[19], 5);
 			if(strncmp(read_bool, "true", 4) == 0) {
 				config->broadcast_to_mqtt = true;
-			} else if(strncmp(read_bool, "false", 4) == 0){
+			} else if(strncmp(read_bool, "false", 5) == 0){
 				config->broadcast_to_mqtt = false;
 			} else {
 				config->broadcast_to_mqtt = true;
+			}
+		} else if(strncmp(line, "enforce_uuid_whitelist:", 23) == 0) {
+			strncpy(read_bool, &line[24], 5);
+			if(strncmp(read_bool, "true", 4) == 0) {
+				config->enforce_uuid_whitelist = true;
+			} else if(strncmp(read_bool, "false", 5) == 0){
+				config->enforce_uuid_whitelist = false;
+			} else {
+				config->enforce_uuid_whitelist = false;
 			}
 		} else if(strncmp(line, "encryption_key:", 15) == 0) {
 			strcpy(config->encryption_key, &line[16]);
@@ -168,6 +186,66 @@ void read_configuration_file(config_dataT *config) {
 	}
 
 	fclose(filestream);
+}
+
+void read_uuid_whitelist_file(config_dataT *config) {
+	FILE *uuid_whitelist_filestream = NULL;
+	char line[256];
+	
+	uuid_whitelist_filestream = fopen(UUID_WHITELIST_FILENAME, "r");
+	if (uuid_whitelist_filestream == 0) {
+		printf("File %s doesn't exist while \"enforce_uuid_whitelist\" is enabled in config.yaml, disabling \"enforce_uuid_whitelist\".\n", UUID_WHITELIST_FILENAME);
+		config->enforce_uuid_whitelist = false;
+	} else {
+		config->uuid_whitelist_max = INITIAL_UUID_WHITELIST_SIZE;
+		config->uuid_whitelist_size = 0;
+		config->uuid_whitelist = (uuid_whitelistT *) malloc(config->uuid_whitelist_max * sizeof(uuid_whitelistT));
+		
+		while(1) {
+			if(fgets(line, 256, uuid_whitelist_filestream) == NULL) { //read file line by line
+				break;
+			}
+			//printf("%s", line);
+			
+			if(config->uuid_whitelist_size == config->uuid_whitelist_max) {
+				config->uuid_whitelist_max = config->uuid_whitelist_max + INITIAL_UUID_WHITELIST_SIZE;
+				config->uuid_whitelist = (uuid_whitelistT *) realloc(config->uuid_whitelist, config->uuid_whitelist_max * sizeof(uuid_whitelistT));
+			}
+			
+			strncpy(config->uuid_whitelist[config->uuid_whitelist_size].uuid, line, 36);
+			config->uuid_whitelist[config->uuid_whitelist_size].uuid[36] = '\0';
+			config->uuid_whitelist_size++;
+		}
+	
+		fclose(uuid_whitelist_filestream);
+	}
+}
+
+void print_uuid_whitelist(config_dataT *config) {
+	int i;
+	
+	for(i = 0; i < config->uuid_whitelist_size; i++) {
+		printf("%s.\n", config->uuid_whitelist[i].uuid);
+	}	
+}
+
+/* returns 1 if uuid exists in whitelist
+		 0 if not
+*/
+int uuid_whitelist_query(config_dataT *config, char *uuid) {
+	int i;
+	
+	for(i = 0; i < config->uuid_whitelist_size; i++) {
+		if(strncmp(config->uuid_whitelist[i].uuid, uuid, 36) == 0) {
+			return 1;
+		}
+	}
+	
+	return 0;
+}
+
+void free_uuid_whitelist(config_dataT *config) {
+	free(config->uuid_whitelist);
 }
 
 void construct_json_str(char *data, char *uuid, char **json_output) {
@@ -339,5 +417,15 @@ void lora_str_to_mqtt_translate(char *lora_message, char *mqtt_message) {
 	}
 	else {
 		strcpy(mqtt_message, lora_message);
+	}
+}
+
+void get_msg_uuid(char *lora_message, char *uuid) {
+	char *occur;
+	
+	occur = strstr(lora_message, "\"u\":\"");
+	if(occur != NULL) {
+		strncpy(uuid, occur + 5, 36);
+		//printf("get_msg_uuid: %s.\n", uuid);
 	}
 }

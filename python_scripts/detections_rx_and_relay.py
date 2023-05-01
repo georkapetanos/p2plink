@@ -20,18 +20,20 @@ def main():
 			continue
 		json_object = json.loads(json_message)
 		payload = json_object["p"]
-		nofproc, rest_string = payload.split(", ", 1)
-		nofproc = nofproc.split("=")[1] # get number of images processed
-		print(nofproc + " Image processings, string: \""+rest_string+"\"")
+		if payload.find(", ") != -1:
+			nofproc, rest_string = payload.split(", ", 1)
+			nofproc = nofproc.split("=")[1] # get number of images processed
+			print(nofproc + " Image processings, string: \""+rest_string+"\"")
 		# process payload with object detections
-		while (True):
-			detection, rest_string = rest_string.split(", ", 1)
-			size, object_name = detection.split(" ", 1)	# max one split as the object can be composed of multiple words
-			print("Object \""+object_name+"\" "+ "{:.2f}".format(float(size) / float(nofproc)))
-			if (rest_string.find(", ") == -1):
-				size, object_name = rest_string.split(" ", 1)	# max one split as the object can be composed of multiple words
+		if payload.find(", ") != -1:
+			while (True):
+				detection, rest_string = rest_string.split(", ", 1)
+				size, object_name = detection.split(" ", 1)	# max one split as the object can be composed of multiple words
 				print("Object \""+object_name+"\" "+ "{:.2f}".format(float(size) / float(nofproc)))
-				break
+				if (rest_string.find(", ") == -1):
+					size, object_name = rest_string.split(" ", 1)	# max one split as the object can be composed of multiple words
+					print("Object \""+object_name+"\" "+ "{:.2f}".format(float(size) / float(nofproc)))
+					break
 		
 		json_message = lrd.lora_str_translate(json_message)
 		publish.single("lrdlink", json_message, hostname=mqtt_hostname, auth={'username':username,'password':password})

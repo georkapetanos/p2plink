@@ -106,8 +106,13 @@ static PyObject *method_receive_encrypted(PyObject *self, PyObject *args) {
 	config_dataT config;
 	int serial, rx_size, decrypted_text_len = 0;
 	unsigned char rx_buf[MAX_MSG_BUFFER], decrypted_text[MAX_MSG_BUFFER];
+	char *uuid_buf;
 
 	read_configuration_file(&config);
+	if(config.enforce_uuid_whitelist) {
+		read_uuid_whitelist_file(&config);
+		//print_uuid_whitelist(&config);
+	}
 	serial_init(config.serial_device, &serial);
 	serial_rx(serial, rx_buf, &rx_size);
 	if(decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len)) {
@@ -123,6 +128,20 @@ static PyObject *method_receive_encrypted(PyObject *self, PyObject *args) {
 		remove_checksum(rx_buf, rx_size);
 		rx_size = rx_size - 2;
 		rx_buf[rx_size] = '\0';
+		
+		if(config.enforce_uuid_whitelist) {
+			uuid_buf = (char *) calloc(1, 37 * sizeof(char *));
+			get_msg_uuid((char *) rx_buf, uuid_buf);
+			if(uuid_whitelist_query(&config, uuid_buf) == 0) {
+				printf("Message UUID: \"%s\" not in whitelist, dropping message.\n", uuid_buf);
+				free_uuid_whitelist(&config);
+				free(uuid_buf);
+				return PyUnicode_FromString("{NULL}");
+			}
+			free_uuid_whitelist(&config);
+			free(uuid_buf);
+		}
+		
 		return PyUnicode_FromString((char *) rx_buf);
 	}
 

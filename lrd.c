@@ -22,13 +22,10 @@
 int main(int argc, char *argv[]) {
 	config_dataT config;
 	int i, j, rx_size, serial, encrypted_text_len = 0, decrypted_text_len = 0;
-	char *json_string = NULL, serial_port[64], *checksum = NULL, *ack_string = NULL, *strstrreturn = NULL, *mqtt_message_buf;
+	char *json_string = NULL, serial_port[64], *checksum = NULL, *ack_string = NULL, *strstrreturn = NULL, *mqtt_message_buf, *uuid_buf;
 	unsigned char encrypted_text[MAX_MSG_BUFFER], decrypted_text[MAX_MSG_BUFFER], *rx_buf;
 	bool use_encryption = false;
-	
-	//default to acknowledge_packets false if no preference is set
-	config.acknowledge_packets = false;
-	config.broadcast_to_mqtt = true;
+
 	read_configuration_file(&config);
 	strcpy(serial_port, config.serial_device);
 	
@@ -107,10 +104,17 @@ int main(int argc, char *argv[]) {
 		} else if(strncmp(argv[i], "-r", 2) == 0) {
 			serial_init(serial_port, &serial);
 			rx_buf = malloc(MAX_MSG_BUFFER*sizeof(unsigned char));
+			
+			if(config.enforce_uuid_whitelist == true) {
+				read_uuid_whitelist_file(&config);
+				print_uuid_whitelist(&config);
+			}
+			
 			if(config.broadcast_to_mqtt) {
 				mqtt_setup();
 				mqtt_message_buf = malloc(MAX_MSG_BUFFER*sizeof(char));
 			}
+			
 			while(1) {
 				if(config.broadcast_to_mqtt) {
 					memset(mqtt_message_buf, 0, MAX_MSG_BUFFER);
@@ -152,12 +156,24 @@ int main(int argc, char *argv[]) {
 					rx_size = rx_size - 2;
 					rx_buf[rx_size] = '\0';
 					if(config.broadcast_to_mqtt) {
+						if(config.enforce_uuid_whitelist) {
+							uuid_buf = (char *) calloc(1, 37 * sizeof(char *));
+							get_msg_uuid((char *) rx_buf, uuid_buf);
+							if(uuid_whitelist_query(&config, uuid_buf) == 0) {
+								printf("Message UUID: \"%s\" not in whitelist, not forwarding to MQTT.\n", uuid_buf);
+								free(uuid_buf);
+								continue;
+							}
+							free(uuid_buf);
+						}
 						lora_str_to_mqtt_translate((char *) rx_buf, mqtt_message_buf);
 						//printf("mqtt_buf: %s\n", mqtt_message_buf);
 						publish_message(mqtt_message_buf, strlen(mqtt_message_buf));
+						
 					}
 				}
 			}
+			free_uuid_whitelist(&config);
 			free(rx_buf);
 			serial_close(&serial);
 			i++;
