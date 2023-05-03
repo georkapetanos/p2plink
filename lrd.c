@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 				embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
 				printf("json: %s\n", json_string);
 				if(use_encryption) {
-					encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
+					encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, config.encryption_mode, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
 					hex_print(encrypted_text, encrypted_text_len);
 					//printf("encrypted_text_len = %d\n", encrypted_text_len);
 					serial_tx(serial, encrypted_text, encrypted_text_len);
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 						for(j = 0; j < 3; j++) {
 							serial_rx_imdreturn(serial, (unsigned char *) ack_string, &rx_size);
 							if(rx_size !=0) { //checksum received;
-								decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, (unsigned char *) ack_string, rx_size, &decrypted_text_len);
+								decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, config.encryption_mode, decrypted_text, (unsigned char *) ack_string, rx_size, &decrypted_text_len);
 								memcpy(ack_string, decrypted_text, decrypted_text_len);
 								rx_size = decrypted_text_len - 1; //minus one because of null termination character
 								strstrreturn = strstr(ack_string, "\"x\"");
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
 				}
 				serial_rx(serial, rx_buf, &rx_size);
 				if(use_encryption) {
-					decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
+					decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, config.encryption_mode, decrypted_text, rx_buf, rx_size, &decrypted_text_len);
 					memcpy(rx_buf, decrypted_text, decrypted_text_len);
 					rx_size = decrypted_text_len - 1; //minus one because of null termination character
 				}
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 					get_checksum(rx_buf, rx_size, checksum);
 					format_ack(serial, checksum, &ack_string, false);
 					if(use_encryption) {
-						encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) ack_string, encrypted_text, &encrypted_text_len);
+						encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, config.encryption_mode, (unsigned char *) ack_string, encrypted_text, &encrypted_text_len);
 						serial_tx(serial, encrypted_text, encrypted_text_len);
 					} else {
 						serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 						get_checksum(rx_buf, rx_size, checksum);
 						format_ack(serial, checksum, &ack_string, true);
 						if(use_encryption) {
-							encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) ack_string, encrypted_text, &encrypted_text_len);
+							encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, config.encryption_mode, (unsigned char *) ack_string, encrypted_text, &encrypted_text_len);
 							serial_tx(serial, encrypted_text, encrypted_text_len);
 						} else {
 							serial_tx(serial, (unsigned char *) ack_string, strlen(ack_string));

@@ -45,7 +45,7 @@ static PyObject *method_transmit_encrypted(PyObject *self, PyObject *args) {
 	checksum_generate((unsigned char *) json_string, strlen(json_string), checksum);
 	embed_checksum((unsigned char *) json_string, strlen(json_string), checksum);
 	//printf("%s %s .%s.\n", config.encryption_key, config.encryption_iv, json_string);
-	encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
+	encrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, config.encryption_mode, (unsigned char *) json_string, encrypted_text, &encrypted_text_len);
 	hex_print(encrypted_text, encrypted_text_len);
 	printf("encrypted_text_len = %d\n", encrypted_text_len);
 	serial_init(config.serial_device, &serial);
@@ -115,7 +115,7 @@ static PyObject *method_receive_encrypted(PyObject *self, PyObject *args) {
 	}
 	serial_init(config.serial_device, &serial);
 	serial_rx(serial, rx_buf, &rx_size);
-	if(decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, decrypted_text, rx_buf, rx_size, &decrypted_text_len)) {
+	if(decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, config.encryption_mode, decrypted_text, rx_buf, rx_size, &decrypted_text_len)) {
 		//decryption failed return here
 		return PyUnicode_FromString("{NULL}");
 	}

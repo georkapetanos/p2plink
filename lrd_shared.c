@@ -122,6 +122,7 @@ void read_configuration_file(config_dataT *config) {
 		fwrite("\nacknowledge_packets: false", 27, 1, filestream);
 		fwrite("\nbroadcast_to_mqtt: true", 24, 1, filestream);
 		fwrite("\nenforce_uuid_whitelist: false", 30, 1, filestream);
+		fwrite("\nencryption_mode: ctr", 21, 1, filestream);
 		fwrite("\n", 1, 1, filestream);
 		rewind(filestream);
 		free(uuid);
@@ -134,6 +135,7 @@ void read_configuration_file(config_dataT *config) {
 	config->uuid_whitelist_max = 0;
 	config->uuid_whitelist_size = 0;
 	config->uuid_whitelist = NULL;
+	config->encryption_mode = 0;
 	
 	while(1) {
 		if(fgets(line, 256, filestream) == NULL) { //read file line by line
@@ -156,6 +158,7 @@ void read_configuration_file(config_dataT *config) {
 			} else {
 				config->acknowledge_packets = false;
 			}
+			memset(read_bool, 0, 6);
 		} else if(strncmp(line, "broadcast_to_mqtt:", 18) == 0) {
 			strncpy(read_bool, &line[19], 5);
 			if(strncmp(read_bool, "true", 4) == 0) {
@@ -165,6 +168,7 @@ void read_configuration_file(config_dataT *config) {
 			} else {
 				config->broadcast_to_mqtt = true;
 			}
+			memset(read_bool, 0, 6);
 		} else if(strncmp(line, "enforce_uuid_whitelist:", 23) == 0) {
 			strncpy(read_bool, &line[24], 5);
 			if(strncmp(read_bool, "true", 4) == 0) {
@@ -174,6 +178,22 @@ void read_configuration_file(config_dataT *config) {
 			} else {
 				config->enforce_uuid_whitelist = false;
 			}
+			memset(read_bool, 0, 6);
+		} else if(strncmp(line, "encryption_mode:", 16) == 0) {
+			strncpy(read_bool, &line[17], 3);
+			if(strncmp(read_bool, "ctr", 3) == 0) {
+				config->encryption_mode = 0;
+			} else if(strncmp(read_bool, "cbc", 3) == 0){
+				config->encryption_mode = 1;
+			} else if(strncmp(read_bool, "cfb", 3) == 0){
+				config->encryption_mode = 2;
+			} else if(strncmp(read_bool, "ofb", 3) == 0){
+				config->encryption_mode = 3;
+			} else {
+				printf("Invalid encryption mode \"%s\" in %s, defaulting to \"ctr\".\n", read_bool, CONFIGURATION_FILENAME);
+				config->encryption_mode = 0;
+			}
+			memset(read_bool, 0, 6);
 		} else if(strncmp(line, "encryption_key:", 15) == 0) {
 			strcpy(config->encryption_key, &line[16]);
 			//write null termination at last position from string, so as to overwrite new line character copied from above.
@@ -224,9 +244,14 @@ void read_uuid_whitelist_file(config_dataT *config) {
 void print_uuid_whitelist(config_dataT *config) {
 	int i;
 	
+	printf("UUID whitelist: ");
 	for(i = 0; i < config->uuid_whitelist_size; i++) {
-		printf("%s.\n", config->uuid_whitelist[i].uuid);
-	}	
+		printf("%s", config->uuid_whitelist[i].uuid);
+		if(i < (config->uuid_whitelist_size - 1)) {
+			printf(", ");
+		}
+	}
+	printf("\n");
 }
 
 /* returns 1 if uuid exists in whitelist

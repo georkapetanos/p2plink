@@ -19,6 +19,7 @@ typedef struct config_data{		// Default values
 	bool acknowledge_packets;	// false
 	bool enforce_uuid_whitelist;	// false
 	bool broadcast_to_mqtt;		// true
+	int encryption_mode;		// 0 (ctr)
 	char encryption_key[64];
 	char encryption_iv[32];
 	uuid_whitelistT *uuid_whitelist;

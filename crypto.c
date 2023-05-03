@@ -2,10 +2,17 @@
 #include <openssl/evp.h>
 #include <string.h>
 
-int encrypt(unsigned char *key, unsigned char *iv, unsigned char *plaintext, unsigned char *encrypted_text, int *encrypted_text_length) {
+/* Block cipher mode of operation: Currently supported ctr (recommended), cbc, cfb, ofb
+ * ctr -> 0
+ * cbc -> 1
+ * cfb -> 2
+ * ofb -> 3
+ */
+
+int encrypt(unsigned char *key, unsigned char *iv, int mode, unsigned char *plaintext, unsigned char *encrypted_text, int *encrypted_text_length) {
 	EVP_CIPHER_CTX *ctx = NULL;
-	int ciphertext_len = 0;
-	int final_ciphertext_len = 0;
+	int ciphertext_len = 0, final_ciphertext_len = 0;
+	int evp_ret;
 	
 	// Create and initialise the context
 	ctx = EVP_CIPHER_CTX_new();
@@ -15,10 +22,24 @@ int encrypt(unsigned char *key, unsigned char *iv, unsigned char *plaintext, uns
 	}
 	
 	// Initialise the encryption operation.
-	if(EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv) != 1){
+	switch (mode) {
+		case 0:	//ctr
+			evp_ret = EVP_EncryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, key, iv);
+			break;
+		case 1:	//cbc
+			evp_ret = EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv);
+			break;
+		case 2:	//cfb
+			evp_ret = EVP_EncryptInit_ex(ctx, EVP_aes_128_cfb(), NULL, key, iv);
+			break;
+		case 3:	//ofb
+			evp_ret = EVP_EncryptInit_ex(ctx, EVP_aes_128_ofb(), NULL, key, iv);
+			break;
+	}
+	
+	if(evp_ret != 1){
 		printf("Error initializing encryption\n");
 		return 1;
-	
 	}
 	
 	// Provide the message to be encrypted, and obtain the encrypted output.
@@ -40,9 +61,9 @@ int encrypt(unsigned char *key, unsigned char *iv, unsigned char *plaintext, uns
 	return 0;
 }
 
-int decrypt(unsigned char *key, unsigned char *iv, unsigned char *decrypted_text, unsigned char *encrypted_text, int encrypted_text_length, int *decrypted_text_length) {
-	int decryptedtext_len = 0;
-	int final_decryptedtext_len = 0;
+int decrypt(unsigned char *key, unsigned char *iv, int mode, unsigned char *decrypted_text, unsigned char *encrypted_text, int encrypted_text_length, int *decrypted_text_length) {
+	int decryptedtext_len = 0, final_decryptedtext_len = 0;
+	int evp_ret;
 	EVP_CIPHER_CTX *ctx = NULL;
 
 	//Create and initialise the context
@@ -53,9 +74,24 @@ int decrypt(unsigned char *key, unsigned char *iv, unsigned char *decrypted_text
 	}
 
 	// Initialise the decryption operation.
-	if(EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv) != 1) {
+	switch (mode) {
+		case 0:	//ctr
+			evp_ret = EVP_DecryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, key, iv);
+			break;
+		case 1:	//cbc
+			evp_ret = EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv);
+			break;
+		case 2:	//cfb
+			evp_ret = EVP_DecryptInit_ex(ctx, EVP_aes_128_cfb(), NULL, key, iv);
+			break;
+		case 3:	//ofb
+			evp_ret = EVP_DecryptInit_ex(ctx, EVP_aes_128_ofb(), NULL, key, iv);
+			break;
+	}
+	
+	if(evp_ret != 1) {
 		printf("Error initializing decryption\n");
-		return 1;
+			return 1;
 	}
 
 	// Provide the message to be decrypted, and obtain the decrypted output.
