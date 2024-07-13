@@ -115,6 +115,7 @@ static PyObject *method_receive_encrypted(PyObject *self, PyObject *args) {
 	}
 	serial_init(config.serial_device, &serial);
 	serial_rx(serial, rx_buf, &rx_size);
+	printf("mode: %d\n", config.encryption_mode);
 	if(decrypt((unsigned char *) config.encryption_key, (unsigned char *) config.encryption_iv, config.encryption_mode, decrypted_text, rx_buf, rx_size, &decrypted_text_len)) {
 		//decryption failed return here
 		return PyUnicode_FromString("{NULL}");
