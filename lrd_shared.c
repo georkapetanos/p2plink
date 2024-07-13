@@ -106,26 +106,31 @@ void remove_checksum(unsigned char *data, int size) {
 
 void read_configuration_file(config_dataT *config) {
 	FILE *filestream = NULL;
-	char line[256], read_bool[6], *uuid;
+	char line[256], read_bool[6], uuid[37];
 
 	filestream = fopen(CONFIGURATION_FILENAME, "r");
 
-	if (filestream == 0) {
-		printf("File %s doesn't exist.\n", CONFIGURATION_FILENAME);
-		uuid = (char *) malloc(37*sizeof(char));
+	if (filestream == NULL) {
+		printf("Can't open file %s, stream=%d errno: %s\n", CONFIGURATION_FILENAME, filestream, strerror(errno));
+		//uuid = (char *) malloc(37*sizeof(char));
 		uuid_generate_string(uuid);
 		filestream = fopen(CONFIGURATION_FILENAME, "w+");
-		fwrite("#LRD configuration file\nuuid: ", 30, 1, filestream);
-		fwrite(uuid, 36, 1, filestream);
-		fwrite("\nserial: ", 9, 1, filestream);
-		fwrite(DEFAULT_SERIAL, 12, 1, filestream);
-		fwrite("\nacknowledge_packets: false", 27, 1, filestream);
-		fwrite("\nbroadcast_to_mqtt: true", 24, 1, filestream);
-		fwrite("\nenforce_uuid_whitelist: false", 30, 1, filestream);
-		fwrite("\nencryption_mode: ctr", 21, 1, filestream);
-		fwrite("\n", 1, 1, filestream);
-		rewind(filestream);
-		free(uuid);
+		if (filestream == NULL) {
+			printf("Can't create file %s, stream=%d errno: %s\n", CONFIGURATION_FILENAME, filestream, strerror(errno));
+			exit(1);
+		} else {
+			fwrite("#LRD configuration file\nuuid: ", 30, 1, filestream);
+			fwrite(uuid, 36, 1, filestream);
+			fwrite("\nserial: ", 9, 1, filestream);
+			fwrite(DEFAULT_SERIAL, 12, 1, filestream);
+			fwrite("\nacknowledge_packets: false", 27, 1, filestream);
+			fwrite("\nbroadcast_to_mqtt: true", 24, 1, filestream);
+			fwrite("\nenforce_uuid_whitelist: false", 30, 1, filestream);
+			fwrite("\nencryption_mode: ctr", 21, 1, filestream);
+			fwrite("\n", 1, 1, filestream);
+			rewind(filestream);
+			//free(uuid);
+		}
 	}
 	
 	// Set default values in case no user preference is set in "config.yaml"
