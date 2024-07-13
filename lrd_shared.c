@@ -111,12 +111,12 @@ void read_configuration_file(config_dataT *config) {
 	filestream = fopen(CONFIGURATION_FILENAME, "r");
 
 	if (filestream == NULL) {
-		printf("Can't open file %s, stream=%d errno: %s\n", CONFIGURATION_FILENAME, filestream, strerror(errno));
+		printf("Can't open file %s, errno: %s\n", CONFIGURATION_FILENAME, strerror(errno));
 		//uuid = (char *) malloc(37*sizeof(char));
 		uuid_generate_string(uuid);
 		filestream = fopen(CONFIGURATION_FILENAME, "w+");
 		if (filestream == NULL) {
-			printf("Can't create file %s, stream=%d errno: %s\n", CONFIGURATION_FILENAME, filestream, strerror(errno));
+			printf("Can't create file %s, errno: %s\n", CONFIGURATION_FILENAME, strerror(errno));
 			exit(1);
 		} else {
 			fwrite("#LRD configuration file\nuuid: ", 30, 1, filestream);
