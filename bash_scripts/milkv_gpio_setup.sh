@@ -21,3 +21,4 @@ cat /sys/class/gpio/gpio497/value
 # ADC setup
 insmod /root/cv181x_saradc.ko
 echo 1 > /sys/class/cvi-saradc/cvi-saradc0/device/cv_saradc
+
