@@ -25,6 +25,22 @@ def format_json(measurement, station, timestamp, temperature, pressure, voltage,
 
 	return payload
 
+def format_power_json(measurement, station, timestamp, iterations, voltage):
+        payload = [
+                {"measurement": measurement,
+                "tags": {
+                        "station": station,
+                },
+                "time": timestamp,
+                "fields": {
+                        "iterations" : iterations,
+                        "voltage": voltage
+                }
+        }
+        ]
+
+        return payload
+
 def main():
 
 	db = 'mydb'
@@ -45,6 +61,7 @@ def main():
 		if (json_message == "{NULL}"):
 			#decryption failed, skip message
 			continue
+		print(json_message)
 		json_object = json.loads(json_message)
 		station = json_object["u"]
 		payload = json_object["p"]
@@ -52,10 +69,15 @@ def main():
 		if len(temp) < 2:
 			print("Invalid payload")
 		else:
-			print(station+": "+temp[0] + " and "+ temp[1]+" and "+temp[2]+" and "+temp[3]+" and "+temp[4])
+			print(station+" and "+ temp[0]+" and "+temp[1])
 			timestamp = datetime.datetime.utcnow()
-			json_payload = format_json(measurement, station, timestamp, float(temp[0]), float(temp[1]), float(temp[2]), float(temp[3]), float(temp[4]))
-			client.write_points(json_payload)
+			json_payload = format_power_json(measurement, station, timestamp, float(temp[0]), float(temp[1]))
+
+			# in case the server/network has been down
+			try:
+				client.write_points(json_payload)
+			except OSError as e:
+				print(e)
 
 if __name__ == "__main__":
 	main()
