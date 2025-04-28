@@ -77,7 +77,12 @@ def main():
 
 		timestamp = datetime.datetime.utcnow()
 		json_payload = format_json(measurement, uuid, timestamp, bmp_temp, bmp_pressure, float(voltage)/1000, hdc_temp, hdc_humidity)
-		client.write_points(json_payload)
+
+		# in case the server/network has been down
+		try:
+			client.write_points(json_payload)
+		except OSError as e:
+			print(e)
 
 		time.sleep(30)
 
